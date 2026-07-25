@@ -1,38 +1,58 @@
 /* Hinterland 2026 — phone-first, readable in direct sun, usable with one thumb. */
 
+/* Palette and type lifted from hinterlandiowa.com: the warm olive-brown ground,
+ * cream text, and powder-blue header bar are theirs. Their display face is Migra
+ * (commercial), so we follow their own fallback into Palatino/Didot territory —
+ * a high-contrast serif with the same poster feel, using fonts already on the
+ * phone. Nothing loads from a network: a webfont would defeat offline-first. */
+
 :root {
-  --bg:        #14110f;
-  --bg-raised: #1f1a17;
-  --bg-sunk:   #0e0c0b;
-  --line:      #332b26;
-  --text:      #f5efe9;
-  --text-dim:  #a89a8f;
-  --text-mute: #7d716a;
-  --accent:    #e8734a;
-  --accent-dim:#8a4029;
-  --star:      #f2c14e;
-  --main:      #e8734a;
-  --miniland:  #6fae8a;
-  --campfire:  #a385cc;
-  --radius: 14px;
+  --bg:        #353329;
+  --bg-raised: #3f3c31;
+  --bg-sunk:   #2b291f;
+  --line:      #4e4a3c;      /* decorative card edges */
+  --line-strong: #807c6e;    /* borders that convey state — meets 3:1 per WCAG 1.4.11 */
+  --text:      #fbf6ef;
+  --text-dim:  #c3bcab;
+  --text-mute: #aca596;      /* 4.51:1 on raised — do not darken */
+  --accent:    #aacbd6;
+  --accent-ink:#22201a;
+  --accent-dim:#5d7d89;
+  --star:      #e8c88a;
+  --main:      #f7b192;
+  --miniland:  #8fc0a0;
+  --campfire:  #9fa4cc;
+
+  /* Two serif roles, deliberately. Didot's hairlines look like the festival
+   * poster but go spidery below ~24px, so it is reserved for the masthead.
+   * Iowan Old Style is sturdy, warm, ships on iOS/macOS — and is, aptly, named
+   * for the state. Artist names in scannable lists use the sans: they get read
+   * at a glance, in the sun, often at arm's length. */
+  --serif-display: Didot, "Bodoni 72", "Playfair Display", Georgia, serif;
+  --serif-text: "Iowan Old Style", Palatino, "Palatino Linotype", "Book Antiqua", Georgia, serif;
+  --sans: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+
+  --radius: 4px;
   --tap: 44px;
   --maxw: 640px;
 }
 
 :root[data-theme="light"] {
-  --bg:        #faf6f1;
+  --bg:        #fbf6ef;
   --bg-raised: #ffffff;
-  --bg-sunk:   #f0e9e1;
-  --line:      #ded2c5;
-  --text:      #241d18;
-  --text-dim:  #6b5c50;
-  --text-mute: #8d7f74;
-  --accent:    #b04a22;
-  --accent-dim:#e5b9a6;
-  --star:      #c99012;
-  --main:      #b04a22;
-  --miniland:  #3d7d59;
-  --campfire:  #6b4d99;
+  --bg-sunk:   #f1eade;
+  --line:      #ded4c2;
+  --line-strong: #988e7c;
+  --text:      #2c2a22;
+  --text-dim:  #5f5949;
+  --text-mute: #7d7666;
+  --accent:    #3f6a7c;
+  --accent-ink:#ffffff;
+  --accent-dim:#a8c3ce;
+  --star:      #a8802e;
+  --main:      #b3602d;
+  --miniland:  #35704e;
+  --campfire:  #55588c;
 }
 
 * { box-sizing: border-box; }
@@ -43,17 +63,39 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font: 16px/1.5 ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  font: 16px/1.5 var(--sans);
   -webkit-font-smoothing: antialiased;
   padding-bottom: env(safe-area-inset-bottom);
   overscroll-behavior-y: none;
 }
 
+/* Announced by screen readers, invisible on screen. */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Every interactive element gets the same unmistakable focus ring. Keyboard and
+ * switch-control users need this; :focus-visible keeps it off mouse/touch taps. */
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
 /* ── Top bar ─────────────────────────────────────────────────── */
+/* The festival's masthead is a powder-blue band with a serif wordmark. */
 
 .topbar {
-  padding: calc(env(safe-area-inset-top) + 14px) 16px 10px;
-  background: var(--bg);
+  background: var(--accent);
+  color: var(--accent-ink);
+  padding: calc(env(safe-area-inset-top) + 12px) 16px 11px;
   max-width: var(--maxw);
   margin: 0 auto;
 }
@@ -67,31 +109,45 @@ body {
 
 .wordmark {
   margin: 0;
-  font-size: 27px;
-  font-weight: 800;
-  letter-spacing: -0.025em;
+  font-family: var(--serif-display);
+  font-size: 31px;
+  font-weight: 400;
+  letter-spacing: -0.005em;
+  line-height: 1.05;
 }
-.wordmark span { color: var(--accent); }
+.wordmark span { font-style: italic; }
 
 .subhead {
-  margin: 2px 0 0;
-  color: var(--text-mute);
-  font-size: 13px;
-  letter-spacing: 0.01em;
+  margin: 3px 0 0;
+  font-size: 12px;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  opacity: 0.78;
 }
 
 .icon-btn {
   width: var(--tap);
   height: var(--tap);
   flex: none;
-  border: 1px solid var(--line);
+  border: 1px solid currentColor;
   border-radius: 50%;
-  background: var(--bg-raised);
-  color: var(--text-dim);
+  background: transparent;
+  color: var(--accent-ink);
   font-size: 17px;
   cursor: pointer;
+  opacity: 0.75;
 }
 .icon-btn:active { transform: scale(0.94); }
+
+.flourish {
+  display: block;
+  width: 190px;
+  max-width: 62%;
+  height: auto;
+  margin: 13px auto 9px;
+  color: var(--text-mute);
+  opacity: 0.85;
+}
 
 /* ── Tabs ────────────────────────────────────────────────────── */
 
@@ -100,30 +156,30 @@ body {
   top: 0;
   z-index: 20;
   display: flex;
-  gap: 4px;
-  padding: 6px 16px 8px;
+  padding: 0 16px;
   background: var(--bg);
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--line-strong);
   max-width: var(--maxw);
   margin: 0 auto;
 }
 
 .tab {
   flex: 1;
-  min-height: 38px;
+  min-height: var(--tap);
   border: 0;
-  border-radius: 10px;
+  border-bottom: 2px solid transparent;
   background: transparent;
   color: var(--text-mute);
   font: inherit;
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
   cursor: pointer;
 }
 .tab.is-active {
-  background: var(--bg-raised);
   color: var(--text);
-  box-shadow: inset 0 0 0 1px var(--line);
+  border-bottom-color: var(--accent);
 }
 
 .view { display: none; max-width: var(--maxw); margin: 0 auto; }
@@ -139,10 +195,10 @@ body {
 }
 
 .day {
-  min-height: 52px;
+  min-height: 54px;
   padding: 6px 2px;
-  border: 1px solid var(--line);
-  border-radius: 11px;
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
   background: var(--bg-raised);
   color: var(--text-dim);
   font: inherit;
@@ -154,14 +210,14 @@ body {
   gap: 1px;
   line-height: 1.2;
 }
-.day b { font-size: 14px; font-weight: 700; }
+.day b { font-family: var(--serif-text); font-size: 16px; font-weight: 600; }
 .day small { font-size: 11px; color: var(--text-mute); }
 .day.is-active {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--accent-ink);
 }
-.day.is-active small { color: rgba(255,255,255,0.82); }
+.day.is-active small { color: var(--accent-ink); opacity: 0.8; }
 .day.is-today::after {
   content: "";
   width: 4px; height: 4px;
@@ -169,7 +225,7 @@ body {
   background: var(--accent);
   margin-top: 1px;
 }
-.day.is-active.is-today::after { background: #fff; }
+.day.is-active.is-today::after { background: var(--accent-ink); }
 
 /* ── Controls ────────────────────────────────────────────────── */
 
@@ -197,7 +253,7 @@ body {
   flex: none;
   border-radius: 13px;
   background: var(--bg-sunk);
-  box-shadow: inset 0 0 0 1px var(--line);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
   position: relative;
   transition: background 0.16s;
 }
@@ -209,8 +265,8 @@ body {
   background: var(--text-mute);
   transition: transform 0.16s, background 0.16s;
 }
-.switch input:checked + .switch-track { background: var(--accent); box-shadow: none; }
-.switch input:checked + .switch-track .switch-thumb { transform: translateX(18px); background: #fff; }
+.switch input:checked + .switch-track { background: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.switch input:checked + .switch-track .switch-thumb { transform: translateX(18px); background: var(--accent-ink); }
 .switch input:focus-visible + .switch-track { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .switch-label { font-size: 14px; font-weight: 600; color: var(--text-dim); }
@@ -222,8 +278,8 @@ body {
   width: 100%;
   min-height: var(--tap);
   padding: 0 14px;
-  border: 1px solid var(--line);
-  border-radius: 11px;
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
   background: var(--bg-raised);
   color: var(--text);
   font: inherit;
@@ -273,15 +329,16 @@ body {
 
 .slot-time {
   flex: none;
-  width: 62px;
-  padding-top: 1px;
+  width: 68px;
+  padding-top: 2px;
 }
 .slot-start {
   display: block;
-  font-size: 15px;
+  font-size: 14.5px;
   font-weight: 750;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
+  white-space: nowrap;   /* "12:45 PM" must never wrap onto two lines */
 }
 .slot-end {
   display: block;
@@ -294,7 +351,7 @@ body {
 .slot-thumb {
   flex: none;
   width: 46px; height: 46px;
-  border-radius: 10px;
+  border-radius: 3px;
   object-fit: cover;
   background: var(--bg-sunk);
   align-self: center;
@@ -302,7 +359,7 @@ body {
 
 .slot-body { flex: 1; min-width: 0; }
 .slot-name {
-  font-size: 16.5px;
+  font-size: 17px;
   font-weight: 650;
   line-height: 1.25;
   letter-spacing: -0.01em;
@@ -346,7 +403,7 @@ body {
   padding: 1px 7px;
   border-radius: 99px;
   background: var(--accent);
-  color: #fff;
+  color: var(--accent-ink);
   font-size: 10.5px;
   font-weight: 800;
   letter-spacing: 0.06em;
@@ -358,8 +415,9 @@ body {
   display: inline-block;
   padding: 1px 7px;
   border-radius: 99px;
-  background: color-mix(in srgb, var(--accent) 20%, transparent);
-  color: var(--accent);
+  background: transparent;
+  box-shadow: inset 0 0 0 1px currentColor;
+  color: var(--main);
   font-size: 10.5px;
   font-weight: 800;
   letter-spacing: 0.04em;
@@ -375,8 +433,8 @@ body {
 }
 .pill {
   flex: 1;
-  min-height: 36px;
-  border: 1px solid var(--line);
+  min-height: var(--tap);
+  border: 1px solid var(--line-strong);
   border-radius: 99px;
   background: var(--bg-raised);
   color: var(--text-mute);
@@ -385,7 +443,7 @@ body {
   font-weight: 650;
   cursor: pointer;
 }
-.pill.is-active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.pill.is-active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 
 .deck { padding: 8px 16px 40px; }
 
@@ -394,7 +452,7 @@ body {
 .deck-photo {
   position: relative;
   aspect-ratio: 1;
-  border-radius: 18px;
+  border-radius: 3px;
   overflow: hidden;
   background: var(--bg-sunk);
 }
@@ -422,9 +480,10 @@ body {
 }
 .deck-name {
   margin: 0;
-  font-size: 27px;
-  font-weight: 800;
-  letter-spacing: -0.025em;
+  font-family: var(--serif-text);
+  font-size: 32px;
+  font-weight: 400;
+  letter-spacing: -0.005em;
   line-height: 1.1;
   text-shadow: 0 1px 12px rgba(0,0,0,0.5);
   overflow-wrap: anywhere;
@@ -434,11 +493,11 @@ body {
 .deck-play {
   position: absolute;
   right: 14px; bottom: 14px;
-  width: 54px; height: 54px;
+  width: 56px; height: 56px;
   border: 0;
   border-radius: 50%;
-  background: rgba(255,255,255,0.94);
-  color: #14110f;
+  background: #fbf6ef;
+  color: #2b291f;
   font-size: 19px;
   cursor: pointer;
   display: flex;
@@ -486,8 +545,8 @@ body {
 .deck-nav {
   width: 52px; height: 50px;
   flex: none;
-  border: 1px solid var(--line);
-  border-radius: 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
   background: var(--bg-raised);
   color: var(--text-dim);
   font-size: 24px;
@@ -498,8 +557,8 @@ body {
 .deck-star {
   flex: 1;
   height: 50px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
   background: var(--bg-raised);
   color: var(--text-dim);
   font: inherit;
@@ -510,7 +569,7 @@ body {
 .deck-star[aria-pressed="true"] {
   background: var(--star);
   border-color: var(--star);
-  color: #241d18;
+  color: #2b291f;
 }
 
 .deck-count {
@@ -527,8 +586,8 @@ body {
   width: 100%;
   min-height: 46px;
   margin-bottom: 8px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
   background: var(--bg-sunk);
   color: var(--text);
   font: inherit;
@@ -580,8 +639,9 @@ body {
 .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .stat b {
   display: block;
-  font-size: 26px;
-  font-weight: 800;
+  font-family: var(--serif-text);
+  font-size: 30px;
+  font-weight: 400;
   letter-spacing: -0.02em;
   line-height: 1.1;
 }
@@ -646,7 +706,7 @@ body {
   width: 100%;
   aspect-ratio: 16 / 10;
   object-fit: cover;
-  border-radius: 14px;
+  border-radius: 3px;
   background: var(--bg-sunk);
   margin-bottom: 14px;
   display: block;
@@ -654,9 +714,10 @@ body {
 
 .sheet h2 {
   margin: 0 0 4px;
-  font-size: 25px;
-  font-weight: 800;
-  letter-spacing: -0.025em;
+  font-family: var(--serif-text);
+  font-size: 29px;
+  font-weight: 400;
+  letter-spacing: -0.005em;
   padding-right: 40px;
   overflow-wrap: anywhere;
 }
@@ -670,7 +731,7 @@ body {
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
-  border-radius: 11px;
+  border-radius: 3px;
   background: var(--bg-sunk);
   border-left: 3px solid var(--slot-color, var(--line));
   font-size: 14px;
@@ -704,8 +765,8 @@ body {
   width: 100%;
   min-height: 48px;
   margin-top: 18px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
   background: var(--bg-sunk);
   color: var(--text-dim);
   font: inherit;
@@ -716,18 +777,18 @@ body {
 .sheet-star[aria-pressed="true"] {
   background: var(--star);
   border-color: var(--star);
-  color: #241d18;
+  color: #2b291f;
 }
 
 .sheet-links { margin-top: 12px; display: flex; gap: 8px; }
 .sheet-links a {
   flex: 1;
-  min-height: 42px;
+  min-height: var(--tap);
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--line);
-  border-radius: 11px;
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
   color: var(--text-dim);
   text-decoration: none;
   font-size: 14px;

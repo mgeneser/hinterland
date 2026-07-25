@@ -26,16 +26,30 @@
   <p class="subhead">St. Charles, Iowa · Jul 30 – Aug 2</p>
 </header>
 
+<!-- The festival's art-nouveau scrollwork, redrawn. Decorative only. -->
+<svg class="flourish" viewBox="0 0 240 26" aria-hidden="true" focusable="false">
+  <g fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round">
+    <path d="M8 13h74"/>
+    <path d="M158 13h74"/>
+    <path d="M120 4c-7 0-12 4.5-12 9s4 8 8.5 8 7-3 7-6-2.5-5-5-5-4 1.5-4 3.5 1.5 3 3 3"/>
+    <path d="M120 4c7 0 12 4.5 12 9s-4 8-8.5 8-7-3-7-6 2.5-5 5-5 4 1.5 4 3.5-1.5 3-3 3"/>
+    <path d="M96 13c0-4 3-6 6-6s5 2 5 4.5"/>
+    <path d="M144 13c0-4-3-6-6-6s-5 2-5 4.5"/>
+    <circle cx="90" cy="13" r="1.6" fill="currentColor" stroke="none"/>
+    <circle cx="150" cy="13" r="1.6" fill="currentColor" stroke="none"/>
+  </g>
+</svg>
+
 <nav class="tabs" role="tablist" aria-label="Sections">
-  <button class="tab is-active" role="tab" aria-selected="true" data-view="schedule">Schedule</button>
-  <button class="tab" role="tab" aria-selected="false" data-view="discover">Listen</button>
-  <button class="tab" role="tab" aria-selected="false" data-view="lineup">Lineup</button>
-  <button class="tab" role="tab" aria-selected="false" data-view="info">Info</button>
+  <button class="tab is-active" role="tab" aria-selected="true" aria-controls="view-schedule" id="tab-schedule" data-view="schedule">Schedule</button>
+  <button class="tab" role="tab" aria-selected="false" aria-controls="view-discover" id="tab-discover" data-view="discover">Listen</button>
+  <button class="tab" role="tab" aria-selected="false" aria-controls="view-lineup" id="tab-lineup" data-view="lineup">Lineup</button>
+  <button class="tab" role="tab" aria-selected="false" aria-controls="view-info" id="tab-info" data-view="info">Info</button>
 </nav>
 
 <!-- ── Schedule ─────────────────────────────────────────────────── -->
-<main id="view-schedule" class="view is-active">
-  <div class="daybar" id="dayBar" role="tablist" aria-label="Festival day"></div>
+<main id="view-schedule" class="view is-active" role="tabpanel" aria-labelledby="tab-schedule" tabindex="0">
+  <div class="daybar" id="dayBar" role="group" aria-label="Festival day"></div>
 
   <div class="controls">
     <label class="switch">
@@ -46,11 +60,12 @@
     <span class="star-count" id="starCount"></span>
   </div>
 
+  <p id="scheduleStatus" class="sr-only" role="status" aria-live="polite"></p>
   <div id="scheduleList" class="schedule"></div>
 </main>
 
 <!-- ── Listen / discover deck ───────────────────────────────────── -->
-<main id="view-discover" class="view">
+<main id="view-discover" class="view" role="tabpanel" aria-labelledby="tab-discover" tabindex="0">
   <div class="deck-filter">
     <button class="pill is-active" data-deck="all">All 48</button>
     <button class="pill" data-deck="undecided">Not starred</button>
@@ -78,7 +93,7 @@
 
       <div class="deck-actions">
         <button class="deck-nav" id="deckPrev" aria-label="Previous artist">‹</button>
-        <button class="deck-star" id="deckStar" aria-pressed="false"></button>
+        <button class="deck-star" id="deckStar" aria-pressed="false" aria-label="Star this artist"></button>
         <button class="deck-nav" id="deckNext" aria-label="Next artist">›</button>
       </div>
       <div class="deck-count" id="deckCount"></div>
@@ -87,7 +102,7 @@
 </main>
 
 <!-- ── Lineup ───────────────────────────────────────────────────── -->
-<main id="view-lineup" class="view">
+<main id="view-lineup" class="view" role="tabpanel" aria-labelledby="tab-lineup" tabindex="0">
   <div class="controls controls--search">
     <input type="search" id="lineupSearch" class="search" placeholder="Search artists" aria-label="Search artists">
   </div>
@@ -95,7 +110,7 @@
 </main>
 
 <!-- ── Info ─────────────────────────────────────────────────────── -->
-<main id="view-info" class="view">
+<main id="view-info" class="view" role="tabpanel" aria-labelledby="tab-info" tabindex="0">
   <div class="info-wrap">
     <section class="card">
       <h2>Your festival</h2>

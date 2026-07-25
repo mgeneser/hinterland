@@ -173,8 +173,8 @@
       var cls = 'day' + (d.id === state.day ? ' is-active' : '') + (isToday(d) ? ' is-today' : '');
       bar.appendChild(el('button', {
         class: cls,
-        role: 'tab',
-        'aria-selected': d.id === state.day,
+        'aria-pressed': d.id === state.day,
+        'aria-label': d.label + ', ' + starred + ' starred',
         onclick: function () {
           state.day = d.id;
           save(STORE_DAY, d.id);
@@ -200,6 +200,12 @@
     var starredToday = all.filter(function (s) { return isStarred(s.name); }).length;
     document.getElementById('starCount').textContent =
       starredToday + ' of ' + all.length + ' starred';
+
+    var status = document.getElementById('scheduleStatus');
+    if (status) {
+      status.textContent = day.label + ': showing ' + shown.length +
+        (state.starredOnly ? ' starred sets' : ' sets') + '.';
+    }
 
     if (!shown.length) {
       list.appendChild(el('div', { class: 'empty' }, [
