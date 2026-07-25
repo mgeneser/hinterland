@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hinterland 2026</title>
+<meta name="description" content="Lineup, set times, and your own schedule for Hinterland Music Festival 2026.">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1b1714">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Hinterland">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-row">
+    <h1 class="wordmark">Hinterland <span>’26</span></h1>
+    <button id="themeToggle" class="icon-btn" aria-label="Switch between light and dark">
+      <span aria-hidden="true" id="themeIcon">☾</span>
+    </button>
+  </div>
+  <p class="subhead">St. Charles, Iowa · Jul 30 – Aug 2</p>
+</header>
+
+<nav class="tabs" role="tablist" aria-label="Sections">
+  <button class="tab is-active" role="tab" aria-selected="true" data-view="schedule">Schedule</button>
+  <button class="tab" role="tab" aria-selected="false" data-view="discover">Listen</button>
+  <button class="tab" role="tab" aria-selected="false" data-view="lineup">Lineup</button>
+  <button class="tab" role="tab" aria-selected="false" data-view="info">Info</button>
+</nav>
+
+<!-- ── Schedule ─────────────────────────────────────────────────── -->
+<main id="view-schedule" class="view is-active">
+  <div class="daybar" id="dayBar" role="tablist" aria-label="Festival day"></div>
+
+  <div class="controls">
+    <label class="switch">
+      <input type="checkbox" id="starredOnly">
+      <span class="switch-track" aria-hidden="true"><span class="switch-thumb"></span></span>
+      <span class="switch-label">My schedule only</span>
+    </label>
+    <span class="star-count" id="starCount"></span>
+  </div>
+
+  <div id="scheduleList" class="schedule"></div>
+</main>
+
+<!-- ── Listen / discover deck ───────────────────────────────────── -->
+<main id="view-discover" class="view">
+  <div class="deck-filter">
+    <button class="pill is-active" data-deck="all">All 48</button>
+    <button class="pill" data-deck="undecided">Not starred</button>
+    <button class="pill" data-deck="starred">My picks</button>
+  </div>
+
+  <div id="deck" class="deck">
+    <div class="deck-card" id="deckCard">
+      <div class="deck-photo">
+        <img id="deckImg" alt="" width="320" height="320">
+        <div class="deck-shade"></div>
+        <div class="deck-overlay">
+          <div class="deck-when" id="deckWhen"></div>
+          <h2 class="deck-name" id="deckName"></h2>
+          <div class="deck-genre" id="deckGenre"></div>
+        </div>
+        <button class="deck-play" id="deckPlay" aria-label="Play preview">
+          <span id="deckPlayIcon">▶</span>
+        </button>
+        <div class="deck-progress"><i id="deckProgress"></i></div>
+      </div>
+
+      <div class="deck-track" id="deckTrack"></div>
+      <p class="deck-blurb" id="deckBlurb"></p>
+
+      <div class="deck-actions">
+        <button class="deck-nav" id="deckPrev" aria-label="Previous artist">‹</button>
+        <button class="deck-star" id="deckStar" aria-pressed="false"></button>
+        <button class="deck-nav" id="deckNext" aria-label="Next artist">›</button>
+      </div>
+      <div class="deck-count" id="deckCount"></div>
+    </div>
+  </div>
+</main>
+
+<!-- ── Lineup ───────────────────────────────────────────────────── -->
+<main id="view-lineup" class="view">
+  <div class="controls controls--search">
+    <input type="search" id="lineupSearch" class="search" placeholder="Search artists" aria-label="Search artists">
+  </div>
+  <div id="lineupList" class="lineup"></div>
+</main>
+
+<!-- ── Info ─────────────────────────────────────────────────────── -->
+<main id="view-info" class="view">
+  <div class="info-wrap">
+    <section class="card">
+      <h2>Your festival</h2>
+      <div id="statBlock" class="stats"></div>
+    </section>
+
+    <section class="card">
+      <h2>My picks</h2>
+      <p>Your stars live on this device only — nothing is synced or shared unless you send the link below.</p>
+      <button class="action" id="shareBtn">Share my lineup</button>
+      <button class="action" id="cachePreviewsBtn">Save my previews for offline</button>
+      <p class="muted" id="cacheStatus">Previews stream from Apple, so they need signal. Save them on wifi and they’ll play at the campsite.</p>
+      <button class="action action--quiet" id="clearBtn">Clear all my stars</button>
+    </section>
+
+    <section class="card">
+      <h2>Set times</h2>
+      <p>Start times come from the official Hinterland set times page. <strong>End times are estimates</strong> — the festival doesn’t publish them. Anywhere you see a <span class="tilde">~</span>, that time was worked out from when the next act starts on the same stage, so treat it as a rough guide, not a promise.</p>
+      <p>Times shown are your phone’s local time. In St. Charles that’s Central.</p>
+    </section>
+
+    <section class="card">
+      <h2>Stages</h2>
+      <ul class="stage-key" id="stageKey"></ul>
+    </section>
+
+    <section class="card">
+      <h2>Offline</h2>
+      <p>This app caches itself the first time you open it, so the lineup and your stars work with no signal. Reception at the amphitheater is famously bad — open it once on wifi before you go.</p>
+      <p class="muted">Your stars are stored on this device only. They aren’t synced anywhere, so clearing your browser data will clear them.</p>
+    </section>
+
+    <section class="card">
+      <h2>Data</h2>
+      <p>Set times pulled from <a href="https://www.hinterlandiowa.com/set-times-2026" rel="noopener">hinterlandiowa.com</a> on July 25, 2026. If the festival shuffles the schedule after that, this app won’t know.</p>
+      <p><a href="https://www.hinterlandiowa.com/" rel="noopener">Official site →</a></p>
+    </section>
+  </div>
+</main>
+
+<!-- ── Artist detail sheet ──────────────────────────────────────── -->
+<div id="sheet" class="sheet" hidden>
+  <div class="sheet-backdrop" data-close></div>
+  <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheetName">
+    <button class="sheet-close" data-close aria-label="Close">×</button>
+    <div id="sheetBody"></div>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script src="artists.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
