@@ -28,6 +28,29 @@ Works with no signal. The app shell and all 48 photos are precached on first loa
 so it opens instantly in a field. Song previews stream from Apple and need a
 connection — hit **Save my previews for offline** on wifi to keep your starred ones.
 
+## How many people can use it
+
+There is no server, no database and no shared state, so nothing in the app itself
+limits concurrency — every phone runs its own independent copy.
+
+| | |
+| --- | --- |
+| First load | **2.93 MB** (app shell, 48 artist photos, both maps) |
+| Every load after | **0 bytes** — the service worker serves everything |
+| GitHub Pages soft bandwidth cap | 100 GB/month → roughly **35,000 first installs** |
+
+The practical ceiling is the venue's cell network, not the hosting. 2.93 MB over
+congested LTE in a field with 20,000 people is slow, which is the real reason to
+open the app once on wifi before you go.
+
+**The one thing that genuinely degraded with concurrency was song previews**, and
+it's been fixed. The iTunes Search API rate-limits per IP, and at a festival every
+phone shares a carrier NAT — so a group browsing the Listen tab together counted
+as one caller and tripped the limit collectively. Preview URLs are now resolved at
+build time into `previews.js`, so the app makes **zero** API calls; audio streams
+from Apple's CDN, which is not rate-limited that way. Regenerate with
+`node tools/fetch-previews.js` if a preview ever stops working.
+
 ## Running it
 
 ```
@@ -59,7 +82,9 @@ Then open the Pages URL on your phone → Share → **Add to Home Screen**.
 | `map.js` | Distance/bearing maths and the lat/lon → map-pixel projection. |
 | `app.js` | All behaviour — schedule, deck, previews, stars, map. |
 | `sw.js` | Service worker. **Bump `CACHE` after editing any precached file.** |
+| `previews.js` | Build-time table of 30-second preview URLs. Generated, don't hand-edit. |
 | `tools/fetch-photos.sh` | Re-downloads artist photos and shrinks them to 320px. |
+| `tools/fetch-previews.js` | Regenerates `previews.js` from the iTunes Search API. |
 | `tools/make-icons.py` | Regenerates the app icons. |
 
 ### If the schedule changes
