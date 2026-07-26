@@ -6,7 +6,7 @@
 <title>Hinterland 2026</title>
 <meta name="description" content="Lineup, set times, and your own schedule for Hinterland Music Festival 2026.">
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#7fae4b">
+<meta name="theme-color" content="#aacbd6">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Hinterland">
@@ -17,16 +17,19 @@
 <body>
 
 <header class="topbar">
-  <h1 class="wordmark">
-    <img src="img/wordmark.jpg" alt="Hinterland — July 30 to August 2, 2026, St. Charles, Iowa" width="1100" height="248">
-  </h1>
+  <h1 class="wordmark">Hinterland</h1>
+  <div class="mast-rule" aria-hidden="true"></div>
+  <p class="mast-meta">
+    <span>Jul 30 – Aug 2, 2026</span>
+    <span>St. Charles, Iowa</span>
+  </p>
   <button id="themeToggle" class="icon-btn" aria-label="Switch between light and dark">
     <span aria-hidden="true" id="themeIcon">☾</span>
   </button>
 </header>
 
-<!-- Said plainly, because this is a public link shared with other festival-goers
-     and the festival has no app of its own — nobody should mistake this for theirs. -->
+<!-- Kept because the app leans on the festival's illustrations and is shared
+     publicly with other attendees, at a festival that has no app of its own. -->
 <p class="unofficial">Unofficial fan guide · not the festival’s app</p>
 
 <nav class="tabs" role="tablist" aria-label="Sections">
@@ -62,22 +65,10 @@
 <!-- ── Food & drink ─────────────────────────────────────────────── -->
 <main id="view-eats" class="view" role="tabpanel" aria-labelledby="tab-eats" tabindex="0">
   <div class="arch-head">
-    <svg class="arch" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
-      <g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2">
-        <path class="a-frame" d="M20 90V42a30 30 0 0 1 60 0v48"/>
-        <path class="a-frame" d="M12 90V42a38 38 0 0 1 76 0v48"/>
-        <circle class="a-bud" cx="50" cy="14" r="5"/>
-        <path class="a-frame" d="M34 90V64h32v26"/>
-        <path class="a-frame" d="M32 64l4-8h28l4 8"/>
-        <path class="a-leaf" d="M42 90V74h16v16"/>
-        <path class="a-leaf" d="M30 52c-4-4-4-11 0-15 4 4 4 11 0 15zM70 52c4-4 4-11 0-15-4 4-4 11 0 15z"/>
-        <path class="a-frame" d="M6 92h88"/>
-      </g>
-    </svg>
-    <div class="arch-words">
-      <h2 class="arch-title">Food &amp; Drink</h2>
-      <p class="arch-sub" id="eatsCount"></p>
-    </div>
+    <img class="ill" src="img/ill-food.png" alt="" width="340" height="340">
+    <h2 class="sr-only">Food &amp; Drink</h2>
+    <p class="arch-sub" id="eatsCount"></p>
+  </div>
   </div>
 
   <div class="controls controls--search">
@@ -105,6 +96,12 @@
 
 <!-- ── Map ──────────────────────────────────────────────────────── -->
 <main id="view-map" class="view" role="tabpanel" aria-labelledby="tab-map" tabindex="0">
+  <div class="arch-head">
+    <img class="ill" src="img/ill-map.png" alt="" width="280" height="280">
+    <h2 class="sr-only">Map</h2>
+    <p class="arch-sub">Where you are, and how far to walk</p>
+  </div>
+
   <div class="seg" role="group" aria-label="Which map">
     <button class="seg-btn is-active" data-map="grounds" aria-pressed="true">Grounds</button>
     <button class="seg-btn" data-map="concourse" aria-pressed="false">Concourse</button>
@@ -146,21 +143,10 @@
 <!-- ── Info: Basecamp + practical ───────────────────────────────── -->
 <main id="view-info" class="view" role="tabpanel" aria-labelledby="tab-info" tabindex="0">
   <div class="arch-head">
-    <svg class="arch" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
-      <g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2">
-        <path class="a-frame" d="M18 90V40a32 32 0 0 1 64 0v50"/>
-        <path class="a-frame" d="M10 90V40a40 40 0 0 1 80 0v50"/>
-        <path class="a-bud" d="M50 8c-6 0-9 4-9 8s3 7 9 7 9-3 9-7-3-8-9-8z"/>
-        <path class="a-leaf" d="M28 90V62l22-14 22 14v28"/>
-        <path class="a-frame" d="M44 90V74h12v16"/>
-        <path class="a-leaf" d="M36 70h10M54 70h10"/>
-        <path class="a-frame" d="M6 92h88"/>
-      </g>
-    </svg>
-    <div class="arch-words">
-      <h2 class="arch-title">Basecamp</h2>
-      <p class="arch-sub">The hub in the campgrounds</p>
-    </div>
+    <img class="ill" src="img/ill-basecamp.webp" alt="" width="340" height="340">
+    <h2 class="sr-only">Basecamp</h2>
+    <p class="arch-sub">The hub in the campgrounds</p>
+  </div>
   </div>
 
   <div class="info-wrap">

@@ -150,17 +150,26 @@ sent anywhere.
 Data from [hinterlandiowa.com](https://www.hinterlandiowa.com/). Previews via the
 iTunes Search API. Not affiliated with the festival.
 
-## The masthead and the disclaimer
+## Artwork and the disclaimer
 
-The header is the festival's own ornate wordmark, cropped from their grounds map
-at full resolution and kept on the green ground it was drawn against — it's raster
-artwork on a texture, so it can't be recoloured and stays the same in both themes.
+The section headers on Eats, Map and Info are the festival's own arch
+illustrations (`hlandicon-02`, `-01`, `-13` from their CDN), used as-is with
+their transparency intact so they sit on either theme's background. The title
+word is drawn into each illustration, so the visible heading is the artwork and
+the `<h2>` next to it is `sr-only` — the heading exists for screen readers and
+document outline, it just isn't text on screen.
 
-Because that logo is theirs and this is a **public link shared with other
-attendees of a festival that has no app of its own**, the app carries a permanent
-"Unofficial fan guide · not the festival's app" line directly under the masthead.
-Leading with their logo and no disclaimer would read as the official app. Don't
-remove that line if you keep the logo.
+Basecamp uses their original WebP rather than a re-encode: at 601px it is both
+higher resolution and smaller than anything `sips` can produce locally, since
+`sips` on this machine cannot write WebP at all.
+
+The masthead is type-set in their display stack, not their logo artwork — name,
+hairline rule, then dates and place stacked beside it, on the powder-blue band.
+
+Because the app leans on their illustrations and is shared publicly with other
+attendees at a festival that has no app of its own, it carries a permanent
+"Unofficial fan guide · not the festival's app" line under the masthead. Less
+critical now that the masthead is type rather than their logo, but still honest.
 
 ## Design notes
 
