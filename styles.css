@@ -171,20 +171,6 @@ body {
 }
 .icon-btn:active { transform: scale(0.94); }
 
-.unofficial {
-  margin: 0;
-  padding: 7px 16px;
-  max-width: var(--maxw);
-  margin-inline: auto;
-  background: var(--bg-sunk);
-  color: var(--text-mute);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  text-align: center;
-}
-
 /* ── Tabs ────────────────────────────────────────────────────── */
 
 .tabs {

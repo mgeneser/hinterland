@@ -166,10 +166,12 @@ higher resolution and smaller than anything `sips` can produce locally, since
 The masthead is type-set in their display stack, not their logo artwork — name,
 hairline rule, then dates and place stacked beside it, on the powder-blue band.
 
-Because the app leans on their illustrations and is shared publicly with other
-attendees at a festival that has no app of its own, it carries a permanent
-"Unofficial fan guide · not the festival's app" line under the masthead. Less
-critical now that the masthead is type rather than their logo, but still honest.
+The standalone disclaimer banner was removed at the owner's request. "A fan-made
+guide, not affiliated with the festival" now sits in the Info tab's Data card
+instead, next to where the sourcing is already explained. Worth keeping somewhere,
+since this is a public link shared with other attendees at a festival that has no
+app of its own — but the masthead is type-set rather than their logo, so nothing
+is passing itself off as official.
 
 ## Design notes
 
