@@ -7,7 +7,7 @@
  * Bump CACHE when you change any precached file, or phones will keep the old one.
  */
 
-var CACHE = 'hinterland-v2';
+var CACHE = 'hinterland-v3';
 var AUDIO_CACHE = 'hinterland-audio';
 
 var SHELL = [
@@ -16,6 +16,7 @@ var SHELL = [
   'styles.css',
   'data.js',
   'artists.js',
+  'previews.js',
   'map.js',
   'app.js',
   'manifest.json',

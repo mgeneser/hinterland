@@ -452,7 +452,17 @@
   // the lookup only costs a request the first time.
 
   var STORE_PREVIEWS = 'hinterland26.previews';
-  var previews = load(STORE_PREVIEWS, {});
+
+  // Start from the build-time table so the common path costs zero API calls.
+  // Anything learned at runtime is layered on top and remembered.
+  var previews = {};
+  if (typeof PREVIEWS === 'object' && PREVIEWS) {
+    Object.keys(PREVIEWS).forEach(function (k) { previews[k] = PREVIEWS[k]; });
+  }
+  (function () {
+    var stored = load(STORE_PREVIEWS, {});
+    Object.keys(stored).forEach(function (k) { previews[k] = stored[k]; });
+  })();
 
   function lookupPreview(name) {
     if (previews[name]) return Promise.resolve(previews[name]);
@@ -489,7 +499,9 @@
             art: (hit.artworkUrl100 || '').replace('100x100', '400x400'),
           };
           previews[name] = rec;
-          save(STORE_PREVIEWS, previews);
+          var learned = load(STORE_PREVIEWS, {});
+          learned[name] = rec;
+          save(STORE_PREVIEWS, learned);
           return rec;
         })
         .catch(function () { return attempt(i + 1, 2); });
@@ -600,7 +612,7 @@
       dEl.deckTrack.appendChild(el('b', { text: cached.track }));
       dEl.deckTrack.appendChild(document.createTextNode('  ·  30-second preview'));
     } else {
-      dEl.deckTrack.textContent = 'Tap play to load a preview';
+      dEl.deckTrack.textContent = 'Tap play for a 30-second preview';
     }
   }
 
@@ -618,6 +630,7 @@
   function playCurrent() {
     var name = currentArtist();
     if (!name) return;
+    var retried = false;
 
     dEl.deckPlay.classList.add('is-loading');
     dEl.deckPlayIcon.textContent = '⋯';
@@ -641,6 +654,24 @@
         dEl.deckPlayIcon.textContent = '❚❚';
         dEl.deckPlay.setAttribute('aria-label', 'Pause preview');
       }).catch(function () {
+        // A baked URL can go stale. Forget it and let one live lookup retry.
+        if (!retried) {
+          delete previews[name];
+          return lookupPreview(name).then(function (fresh) {
+            retried = true;
+            if (fresh && fresh.url && currentArtist() === name) {
+              audio.src = fresh.url;
+              return audio.play();
+            }
+            throw new Error('no fresh url');
+          }).then(function () {
+            dEl.deckPlayIcon.textContent = '❚❚';
+          }).catch(function () {
+            dEl.deckPlayIcon.textContent = '▶';
+            wantPlaying = false;
+            dEl.deckTrack.textContent = 'Could not play — tap again';
+          });
+        }
         dEl.deckPlayIcon.textContent = '▶';
         wantPlaying = false;
         dEl.deckTrack.textContent = 'Could not play — tap again';
