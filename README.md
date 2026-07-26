@@ -88,7 +88,7 @@ Then open the Pages URL on your phone → Share → **Add to Home Screen**.
 | `previews.js` | Build-time table of 30-second preview URLs. Generated, don't hand-edit. |
 | `tools/fetch-photos.sh` | Re-downloads artist photos and shrinks them to 320px. |
 | `tools/fetch-previews.js` | Regenerates `previews.js` from the iTunes Search API. |
-| `tools/make-icons.py` | Regenerates the app icons. |
+| `tools/make-icons.py` | Regenerates the app icons from a festival illustration. |
 
 ### If the schedule changes
 
@@ -196,3 +196,34 @@ Every colour pair is checked against WCAG AA with a script rather than by eye,
 including the awkward ones: filled chips whose ink has to flip between themes,
 and borders that convey state (1.4.11 wants 3:1, which is why there are separate
 `--line` and `--line-strong` tokens).
+
+## The app icon
+
+Set in three places, and all three matter for different clients:
+
+| Where | Used by |
+| --- | --- |
+| `<link rel="apple-touch-icon" href="icons/icon-180.png">` | **iOS Add to Home Screen.** iOS ignores the manifest for this, so 180 is the file that decides what's on your phone. |
+| `manifest.json` → `icons[]` | Android/Chrome install and the install prompt |
+| `<link rel="icon">` | browser tab favicon |
+
+All four files are precached, so the icon survives an offline install.
+
+Regenerate with `python3 tools/make-icons.py map` (or `butterfly`). The script
+exists because there's no PIL or ImageMagick here and `sips` cannot flatten
+transparency onto a chosen colour — only pad. App icons must be fully opaque,
+since iOS composites transparency to black, so the art genuinely has to be
+blended onto a solid background. Hence the small PNG reader/writer. Output is
+colourtype 2 (RGB, no alpha) on purpose.
+
+Two notes if you revisit this:
+
+- **`maskable` needs its own file.** `icon-512.png` used to be declared as both
+  `purpose: any` and `purpose: maskable`, which is wrong — `any` wants edge-to-edge
+  art, `maskable` needs padding so Android's circular crop can't clip it. There is
+  now a separate `icon-maskable-512.png` with the art scaled to 68%.
+- **The butterfly is two different drawings.** Their web-clip icon is a colourful
+  butterfly but only 256px, so it can't make a crisp 512. `HLAND_GRAPHICS-09` is a
+  butterfly at 1667×2084, but it's monochrome line art and goes wispy at 180px on
+  a home screen. The map arch, cropped above its lettering, holds up far better at
+  icon size — that's what ships.
