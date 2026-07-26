@@ -76,14 +76,17 @@ serving the old schedule from cache.
   Everywhere an estimate is shown it's prefixed with `~`. Don't miss a headliner
   over a guessed number.
 - **Times are your phone's local time**, which is Central at the festival.
-- **Stars are per-device.** They live in `localStorage`, aren't synced, and clearing
-  browser data clears them. *Share my lineup* encodes your picks in a URL — opening
-  someone else's link merges their picks into yours rather than replacing them.
+- **Stars are per-device.** They live in `localStorage`, aren't synced to anything,
+  and clearing browser data clears them. Every person who installs the app keeps
+  their own separate schedule.
 - **Artist blurbs are original**, written from research rather than copied from the
   festival site, and they say when to skip an act as well as when to go.
 - **Photos** are the festival's own press images, downscaled to 320px thumbnails and
   bundled so the app works with no signal. Swap `tools/fetch-photos.sh` for your own
   images if you'd rather not host theirs.
+- Set times were captured **July 25, 2026**. If the festival reshuffles after that,
+  this app won't know — re-check the official set times page before you go.
+
 ### Map accuracy — read this before trusting the dot
 
 The festival publishes no coordinates for anything, and OpenStreetMap has almost
@@ -115,9 +118,6 @@ That has consequences you should not gloss over:
 
 Location is requested only when you tap the button, is never stored, and is never
 sent anywhere.
-
-- Set times were captured **July 25, 2026**. If the festival reshuffles after that,
-  this app won't know — re-check the official set times page before you go.
 
 Data from [hinterlandiowa.com](https://www.hinterlandiowa.com/). Previews via the
 iTunes Search API. Not affiliated with the festival.
