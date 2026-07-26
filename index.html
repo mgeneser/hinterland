@@ -6,7 +6,7 @@
 <title>Hinterland 2026</title>
 <meta name="description" content="Lineup, set times, and your own schedule for Hinterland Music Festival 2026.">
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#aacbd6">
+<meta name="theme-color" content="#7fae4b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Hinterland">
@@ -17,28 +17,17 @@
 <body>
 
 <header class="topbar">
-  <div class="topbar-row">
-    <h1 class="wordmark">Hinterland <span>’26</span></h1>
-    <button id="themeToggle" class="icon-btn" aria-label="Switch between light and dark">
-      <span aria-hidden="true" id="themeIcon">☾</span>
-    </button>
-  </div>
-  <p class="subhead">St. Charles, Iowa · Jul 30 – Aug 2</p>
+  <h1 class="wordmark">
+    <img src="img/wordmark.jpg" alt="Hinterland — July 30 to August 2, 2026, St. Charles, Iowa" width="1100" height="248">
+  </h1>
+  <button id="themeToggle" class="icon-btn" aria-label="Switch between light and dark">
+    <span aria-hidden="true" id="themeIcon">☾</span>
+  </button>
 </header>
 
-<!-- The festival's art-nouveau scrollwork, redrawn. Decorative only. -->
-<svg class="flourish" viewBox="0 0 240 26" aria-hidden="true" focusable="false">
-  <g fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round">
-    <path d="M8 13h74"/>
-    <path d="M158 13h74"/>
-    <path d="M120 4c-7 0-12 4.5-12 9s4 8 8.5 8 7-3 7-6-2.5-5-5-5-4 1.5-4 3.5 1.5 3 3 3"/>
-    <path d="M120 4c7 0 12 4.5 12 9s-4 8-8.5 8-7-3-7-6 2.5-5 5-5 4 1.5 4 3.5-1.5 3-3 3"/>
-    <path d="M96 13c0-4 3-6 6-6s5 2 5 4.5"/>
-    <path d="M144 13c0-4-3-6-6-6s-5 2-5 4.5"/>
-    <circle cx="90" cy="13" r="1.6" fill="currentColor" stroke="none"/>
-    <circle cx="150" cy="13" r="1.6" fill="currentColor" stroke="none"/>
-  </g>
-</svg>
+<!-- Said plainly, because this is a public link shared with other festival-goers
+     and the festival has no app of its own — nobody should mistake this for theirs. -->
+<p class="unofficial">Unofficial fan guide · not the festival’s app</p>
 
 <nav class="tabs" role="tablist" aria-label="Sections">
   <button class="tab is-active" role="tab" aria-selected="true" aria-controls="view-schedule" id="tab-schedule" data-view="schedule">Schedule</button>
@@ -73,19 +62,22 @@
 <!-- ── Food & drink ─────────────────────────────────────────────── -->
 <main id="view-eats" class="view" role="tabpanel" aria-labelledby="tab-eats" tabindex="0">
   <div class="arch-head">
-    <svg class="arch" viewBox="0 0 120 78" aria-hidden="true" focusable="false">
-      <g fill="none" stroke-linecap="round" stroke-width="1.6">
-        <path class="a-frame" d="M22 76V34a38 38 0 0 1 76 0v42"/>
-        <path class="a-frame" d="M14 76V34a46 46 0 0 1 92 0v42"/>
-        <circle class="a-bud" cx="60" cy="12" r="4"/>
-        <path class="a-leaf" d="M28 76V52c0-7 5-12 10-12M92 76V52c0-7-5-12-10-12"/>
-        <path class="a-leaf" d="M38 40c-4-4-4-11 0-15 4 4 4 11 0 15zM82 40c4-4 4-11 0-15-4 4-4 11 0 15z"/>
-        <path class="a-frame" d="M46 30c0-6 6-10 14-10s14 4 14 10"/>
-        <path class="a-leaf" d="M52 62h16M56 68h8"/>
+    <svg class="arch" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+      <g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2">
+        <path class="a-frame" d="M20 90V42a30 30 0 0 1 60 0v48"/>
+        <path class="a-frame" d="M12 90V42a38 38 0 0 1 76 0v48"/>
+        <circle class="a-bud" cx="50" cy="14" r="5"/>
+        <path class="a-frame" d="M34 90V64h32v26"/>
+        <path class="a-frame" d="M32 64l4-8h28l4 8"/>
+        <path class="a-leaf" d="M42 90V74h16v16"/>
+        <path class="a-leaf" d="M30 52c-4-4-4-11 0-15 4 4 4 11 0 15zM70 52c4-4 4-11 0-15-4 4-4 11 0 15z"/>
+        <path class="a-frame" d="M6 92h88"/>
       </g>
     </svg>
-    <h2 class="arch-title">Food &amp; Drink</h2>
-    <p class="arch-sub" id="eatsCount"></p>
+    <div class="arch-words">
+      <h2 class="arch-title">Food &amp; Drink</h2>
+      <p class="arch-sub" id="eatsCount"></p>
+    </div>
   </div>
 
   <div class="controls controls--search">
@@ -154,19 +146,21 @@
 <!-- ── Info: Basecamp + practical ───────────────────────────────── -->
 <main id="view-info" class="view" role="tabpanel" aria-labelledby="tab-info" tabindex="0">
   <div class="arch-head">
-    <svg class="arch" viewBox="0 0 120 78" aria-hidden="true" focusable="false">
-      <g fill="none" stroke-linecap="round" stroke-width="1.6">
-        <path class="a-frame" d="M18 76V32a42 42 0 0 1 84 0v44"/>
-        <path class="a-frame" d="M10 76V32a50 50 0 0 1 100 0v44"/>
-        <path class="a-bud" d="M60 8c-5 0-8 3-8 7s3 6 8 6 8-2 8-6-3-7-8-7z"/>
-        <path class="a-leaf" d="M34 76V56h52v20"/>
-        <path class="a-leaf" d="M34 56l6-8h40l6 8"/>
-        <path class="a-frame" d="M46 76V64h12v12"/>
-        <path class="a-leaf" d="M24 76V50c0-6 4-10 9-10M96 76V50c0-6-4-10-9-10"/>
+    <svg class="arch" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+      <g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2">
+        <path class="a-frame" d="M18 90V40a32 32 0 0 1 64 0v50"/>
+        <path class="a-frame" d="M10 90V40a40 40 0 0 1 80 0v50"/>
+        <path class="a-bud" d="M50 8c-6 0-9 4-9 8s3 7 9 7 9-3 9-7-3-8-9-8z"/>
+        <path class="a-leaf" d="M28 90V62l22-14 22 14v28"/>
+        <path class="a-frame" d="M44 90V74h12v16"/>
+        <path class="a-leaf" d="M36 70h10M54 70h10"/>
+        <path class="a-frame" d="M6 92h88"/>
       </g>
     </svg>
-    <h2 class="arch-title">Basecamp</h2>
-    <p class="arch-sub">The hub in the campgrounds</p>
+    <div class="arch-words">
+      <h2 class="arch-title">Basecamp</h2>
+      <p class="arch-sub">The hub in the campgrounds</p>
+    </div>
   </div>
 
   <div class="info-wrap">

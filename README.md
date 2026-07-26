@@ -150,6 +150,18 @@ sent anywhere.
 Data from [hinterlandiowa.com](https://www.hinterlandiowa.com/). Previews via the
 iTunes Search API. Not affiliated with the festival.
 
+## The masthead and the disclaimer
+
+The header is the festival's own ornate wordmark, cropped from their grounds map
+at full resolution and kept on the green ground it was drawn against — it's raster
+artwork on a texture, so it can't be recoloured and stays the same in both themes.
+
+Because that logo is theirs and this is a **public link shared with other
+attendees of a festival that has no app of its own**, the app carries a permanent
+"Unofficial fan guide · not the festival's app" line directly under the masthead.
+Leading with their logo and no disclaimer would read as the official app. Don't
+remove that line if you keep the logo.
+
 ## Design notes
 
 Palette and type come from hinterlandiowa.com's own design tokens rather than
