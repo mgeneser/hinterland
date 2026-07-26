@@ -312,10 +312,11 @@ body {
 .slot {
   display: flex;
   align-items: stretch;
-  gap: 10px;
+  gap: 0;
   width: 100%;
-  padding: 11px 12px;
+  padding: 0;
   margin-bottom: 6px;
+  overflow: hidden;
   border: 1px solid var(--line);
   border-left: 3px solid var(--slot-color, var(--line));
   border-radius: var(--radius);
@@ -328,40 +329,46 @@ body {
 .slot:active { transform: scale(0.99); }
 
 .slot-time {
-  flex: none;
-  width: 68px;
-  padding-top: 2px;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 1px;
 }
 .slot-start {
-  display: block;
-  font-size: 14.5px;
+  font-size: 14px;
   font-weight: 750;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
-  white-space: nowrap;   /* "12:45 PM" must never wrap onto two lines */
+  letter-spacing: 0.01em;
+  white-space: nowrap;   /* "12:45 PM" must never wrap mid-time */
 }
 .slot-end {
-  display: block;
-  font-size: 11.5px;
+  font-size: 12px;
   color: var(--text-mute);
   font-variant-numeric: tabular-nums;
-  margin-top: 1px;
+  white-space: nowrap;
 }
 
 .slot-thumb {
   flex: none;
-  width: 46px; height: 46px;
-  border-radius: 3px;
+  width: 84px;
+  height: auto;
+  align-self: stretch;
   object-fit: cover;
   background: var(--bg-sunk);
-  align-self: center;
+  display: block;
 }
+.slot-thumb--empty { min-height: 84px; }
 
-.slot-body { flex: 1; min-width: 0; }
+.slot-body {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 4px 10px 12px;
+}
 .slot-name {
   font-size: 17px;
   font-weight: 650;
-  line-height: 1.25;
+  line-height: 1.22;
   letter-spacing: -0.01em;
   overflow-wrap: anywhere;
 }
@@ -380,7 +387,7 @@ body {
 .slot-star {
   flex: none;
   width: var(--tap);
-  margin: -11px -12px -11px 0;
+  align-self: stretch;
   border: 0;
   background: none;
   color: var(--line);
@@ -805,3 +812,99 @@ body {
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }
+
+/* ── Map ─────────────────────────────────────────────────────── */
+
+.map-wrap {
+  padding: 8px 16px 0;
+}
+
+/* The illustration is detailed, so let it scroll and pinch rather than
+ * squashing it to fit a phone. */
+.map-stage {
+  position: relative;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
+  background: var(--bg-sunk);
+  max-height: 62vh;
+}
+.map-stage img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Position marker. Sized as a percentage of the image so it survives zoom. */
+.me {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.me-dot {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 14px; height: 14px;
+  margin: -7px 0 0 -7px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2.5px solid #fbf6ef;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.45);
+}
+.me-ring {
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  min-width: 26px;
+  min-height: 26px;
+}
+/* Direction of travel, drawn as a cone rather than an arrow because the
+ * heading is only good to a few degrees. */
+.me-cone {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 44px; height: 44px;
+  transform-origin: 50% 100%;
+  background: conic-gradient(from -22deg at 50% 100%,
+    color-mix(in srgb, var(--accent) 75%, transparent) 0deg,
+    color-mix(in srgb, var(--accent) 10%, transparent) 44deg,
+    transparent 44deg);
+  clip-path: polygon(50% 100%, 0 0, 100% 0);
+}
+
+.map-controls { padding: 12px 16px 4px; }
+
+.map-nav { padding: 4px 16px 0; }
+.map-h {
+  margin: 6px 0 8px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+}
+
+.dist-list { list-style: none; margin: 0 0 12px; padding: 0; }
+.dist-row {
+  padding: 9px 12px;
+  margin-bottom: 5px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--bg-raised);
+}
+.dist-row--flag { border-color: var(--accent); }
+.dist-tag {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 2px;
+}
+.dist-name { display: block; font-size: 15.5px; font-weight: 650; }
+.dist-meta { display: block; font-size: 13px; color: var(--text-mute); margin-top: 1px; }

@@ -196,6 +196,15 @@
     var all = sets.filter(function (s) { return s.dayId === state.day; });
     var shown = state.starredOnly ? all.filter(function (s) { return isStarred(s.name); }) : all;
 
+    var q = state.search.trim().toLowerCase();
+    if (q) {
+      shown = shown.filter(function (s) {
+        var a = ARTISTS[s.name];
+        var hay = s.name + ' ' + (a ? a.genre + ' ' + (a.soundsLike || []).join(' ') : '');
+        return hay.toLowerCase().indexOf(q) !== -1;
+      });
+    }
+
     // Star count for this day
     var starredToday = all.filter(function (s) { return isStarred(s.name); }).length;
     document.getElementById('starCount').textContent =
@@ -209,10 +218,11 @@
 
     if (!shown.length) {
       list.appendChild(el('div', { class: 'empty' }, [
-        el('b', { text: state.starredOnly ? 'Nothing starred yet' : 'No sets' }),
-        state.starredOnly
-          ? 'Turn the filter off and tap a star next to any act you want to catch.'
-          : 'Check another day.',
+        el('b', { text: q ? 'No matches' : (state.starredOnly ? 'Nothing starred yet' : 'No sets') }),
+        q ? 'Try a genre like \u201cfolk\u201d, or an artist you already like.'
+          : (state.starredOnly
+              ? 'Turn the filter off and tap a star next to any act you want to catch.'
+              : 'Check another day.'),
       ]));
       return;
     }
@@ -231,7 +241,7 @@
     shown.forEach(function (s) {
       // In "my schedule" mode, show the free time between your sets —
       // that's the camper-run window.
-      if (state.starredOnly && prev) {
+      if (state.starredOnly && !q && prev) {
         var gapMins = Math.round((s.start - prev.end) / 60000);
         if (gapMins >= 25) {
           list.appendChild(el('div', { class: 'gap' }, [
@@ -283,53 +293,20 @@
         if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); openSheet(s.name); }
       },
     }, [
-      el('div', { class: 'slot-time' }, [
-        el('span', { class: 'slot-start', text: fmtTime(s.start) }),
-        el('span', { class: 'slot-end', text: '~' + fmtTime(s.end) }),
-      ]),
       photo ? el('img', {
         class: 'slot-thumb', src: photo, alt: '', loading: 'lazy',
-        width: '46', height: '46',
-      }) : null,
+        width: '76', height: '76',
+      }) : el('div', { class: 'slot-thumb slot-thumb--empty' }),
       el('div', { class: 'slot-body' }, [
+        el('div', { class: 'slot-time' }, [
+          el('span', { class: 'slot-start', text: fmtTime(s.start) }),
+          el('span', { class: 'slot-end', text: '– ~' + fmtTime(s.end) }),
+        ]),
         el('div', { class: 'slot-name', text: s.name }),
         el('div', { class: 'slot-meta' }, meta),
       ]),
       star,
     ]);
-  }
-
-  // ── Lineup ──────────────────────────────────────────────────────
-
-  function renderLineup() {
-    var list = document.getElementById('lineupList');
-    list.textContent = '';
-    var q = state.search.trim().toLowerCase();
-    var now = new Date();
-    var any = false;
-
-    DAYS.forEach(function (d) {
-      var daySets = sets.filter(function (s) {
-        if (s.dayId !== d.id) return false;
-        if (!q) return true;
-        var a = ARTISTS[s.name];
-        var hay = s.name + ' ' + (a ? a.genre + ' ' + (a.soundsLike || []).join(' ') : '');
-        return hay.toLowerCase().indexOf(q) !== -1;
-      });
-      if (!daySets.length) return;
-      any = true;
-      list.appendChild(el('div', { class: 'lineup-day', text: d.label + ' · ' + d.short.split(' ')[1] }));
-      daySets.forEach(function (s) {
-        list.appendChild(renderSlot(s, now, false));
-      });
-    });
-
-    if (!any) {
-      list.appendChild(el('div', { class: 'empty' }, [
-        el('b', { text: 'No matches' }),
-        'Try a genre like “folk” or a name.',
-      ]));
-    }
   }
 
   // ── Artist sheet ────────────────────────────────────────────────
@@ -738,53 +715,230 @@
     }, { passive: true });
   })();
 
-  // ── Sharing and offline previews ────────────────────────────────
+  // ── Map ─────────────────────────────────────────────────────────
+
+  var mapState = { which: 'grounds', fix: null, heading: null, watchId: null, calibrating: false };
+
+  function renderMap() {
+    var img = document.getElementById('mapImg');
+    var want = mapState.which === 'concourse' ? MAP.concourse : MAP.image;
+    if (img.getAttribute('src') !== want) img.setAttribute('src', want);
+    positionMe();
+    renderDistances();
+  }
+
+  // Place the dot in the map image's own coordinate space, as a percentage, so
+  // it stays correct while the image is zoomed or the layout changes.
+  function positionMe() {
+    var pin = document.getElementById('mePin');
+    // The concourse map is a schematic with no road references — there is no
+    // honest way to place a GPS dot on it, so we don't pretend.
+    if (!mapState.fix || mapState.which !== 'grounds') { pin.hidden = true; return; }
+
+    var fix = HLGeo.correct(mapState.fix);
+    var px = HLGeo.lonLatToPx(fix.lat, fix.lon);
+    var xPct = px.x / MAP.refWidth * 100;
+    var yPct = px.y / MAP.refHeight * 100;
+
+    if (xPct < -8 || xPct > 108 || yPct < -8 || yPct > 108) {
+      pin.hidden = true;
+      setStatus('You look like you’re off the map — that usually means you’re not at the festival yet.');
+      return;
+    }
+
+    pin.hidden = false;
+    pin.style.left = xPct + '%';
+    pin.style.top = yPct + '%';
+
+    // Accuracy ring: the GPS fix's own error plus the map's ~180 m distortion.
+    var metres = (fix.accuracy || 20) + MAP.accuracyNoteMetres;
+    var mapWidthM = MAP.refWidth * MAP.mPerPxX;
+    var ringPct = metres / mapWidthM * 100 * 2;
+    var ring = document.getElementById('meRing');
+    ring.style.width = ringPct + '%';
+    ring.style.paddingBottom = ringPct + '%';
+
+    var cone = document.getElementById('meCone');
+    if (mapState.heading === null) {
+      cone.hidden = true;
+    } else {
+      cone.hidden = false;
+      cone.style.transform = 'translate(-50%, -100%) rotate(' + mapState.heading + 'deg)';
+    }
+  }
+
+  function renderDistances() {
+    var wrap = document.getElementById('mapNav');
+    var ul = document.getElementById('distList');
+    if (!mapState.fix) { wrap.hidden = true; return; }
+    wrap.hidden = false;
+    ul.textContent = '';
+
+    var fix = HLGeo.correct(mapState.fix);
+
+    // Whatever you starred next is the thing you actually want to walk to.
+    var now = new Date();
+    var nextStarred = sets.filter(function (s) {
+      return isStarred(s.name) && s.start > now;
+    })[0];
+
+    var list = PLACES.map(function (p) {
+      return {
+        place: p,
+        m: HLGeo.distanceM(fix, p),
+        bearing: HLGeo.bearingDeg(fix, p),
+      };
+    }).sort(function (a, b) { return a.m - b.m; });
+
+    if (nextStarred) {
+      var pid = STAGE_PLACE[nextStarred.stageId];
+      var hit = list.filter(function (x) { return x.place.id === pid; })[0];
+      if (hit) {
+        ul.appendChild(distRow(hit, 'Next up: ' + nextStarred.name + ' at ' +
+          fmtTime(nextStarred.start)));
+      }
+    }
+
+    list.slice(0, 8).forEach(function (x) { ul.appendChild(distRow(x, null)); });
+  }
+
+  function distRow(x, tag) {
+    var heading = mapState.heading;
+    // If we know which way you're facing, say left/right instead of compass
+    // points — nobody reads a compass while carrying a chair.
+    var rel = '';
+    if (heading !== null) {
+      var d = ((x.bearing - heading + 540) % 360) - 180;
+      if (Math.abs(d) < 25) rel = 'straight ahead';
+      else if (Math.abs(d) > 155) rel = 'behind you';
+      else rel = (d > 0 ? 'to your right' : 'to your left');
+    }
+
+    return el('li', { class: 'dist-row' + (tag ? ' dist-row--flag' : '') }, [
+      tag ? el('span', { class: 'dist-tag', text: tag }) : null,
+      el('span', { class: 'dist-name', text: x.place.name }),
+      el('span', { class: 'dist-meta', text:
+        HLGeo.fmtDistance(x.m) + ' · ' + HLGeo.walkMinutes(x.m) + ' min walk · ' +
+        (rel || HLGeo.compass(x.bearing)) }),
+    ]);
+  }
+
+  function setStatus(msg) {
+    document.getElementById('locStatus').textContent = msg;
+  }
+
+  function startLocating() {
+    if (!navigator.geolocation) {
+      setStatus('This phone won’t share location with the browser.');
+      return;
+    }
+    setStatus('Getting a fix…');
+
+    mapState.watchId = navigator.geolocation.watchPosition(function (pos) {
+      mapState.fix = {
+        lat: pos.coords.latitude,
+        lon: pos.coords.longitude,
+        accuracy: pos.coords.accuracy,
+      };
+      var cal = HLGeo.loadCal();
+      setStatus('GPS accurate to about ' + Math.round(pos.coords.accuracy) + ' m' +
+        (cal ? ', corrected at ' + cal.at + '.' :
+               '. The map itself is only good to ~180 m — see below.'));
+      positionMe();
+      renderDistances();
+      document.getElementById('locBtn').textContent = 'Stop using my location';
+    }, function (err) {
+      setStatus(err.code === 1
+        ? 'Location permission was declined. You can re-enable it in Settings → Safari.'
+        : 'Couldn’t get a location fix out here.');
+    }, { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 });
+
+    requestHeading();
+  }
+
+  function stopLocating() {
+    if (mapState.watchId !== null) navigator.geolocation.clearWatch(mapState.watchId);
+    mapState.watchId = null;
+    mapState.fix = null;
+    mapState.heading = null;
+    document.getElementById('locBtn').textContent = 'Show where I am';
+    setStatus('Location is off. Nothing is sent anywhere — it stays on your phone.');
+    positionMe();
+    renderDistances();
+  }
+
+  // iOS requires an explicit, gesture-triggered grant for the compass.
+  function requestHeading() {
+    function attach() {
+      window.addEventListener('deviceorientation', function (ev) {
+        var h = null;
+        if (typeof ev.webkitCompassHeading === 'number') h = ev.webkitCompassHeading;
+        else if (ev.absolute && typeof ev.alpha === 'number') h = 360 - ev.alpha;
+        if (h === null || isNaN(h)) return;
+        mapState.heading = h;
+        positionMe();
+      }, true);
+    }
+    var DOE = window.DeviceOrientationEvent;
+    if (DOE && typeof DOE.requestPermission === 'function') {
+      DOE.requestPermission().then(function (r) {
+        if (r === 'granted') attach();
+      }).catch(function () {});
+    } else if (DOE) {
+      attach();
+    }
+  }
+
+  document.getElementById('locBtn').addEventListener('click', function () {
+    if (mapState.watchId === null) startLocating();
+    else stopLocating();
+  });
+
+  Array.prototype.forEach.call(document.querySelectorAll('[data-map]'), function (btn) {
+    btn.addEventListener('click', function () {
+      mapState.which = btn.dataset.map;
+      Array.prototype.forEach.call(document.querySelectorAll('[data-map]'), function (b) {
+        b.classList.toggle('is-active', b === btn);
+      });
+      renderMap();
+    });
+  });
+
+  // Standing at a known landmark is the cheapest possible survey correction.
+  document.getElementById('calBtn').addEventListener('click', function () {
+    if (!mapState.fix) {
+      document.getElementById('calNote').textContent =
+        'Turn location on first, then tap this while you’re standing at a gate or stage.';
+      return;
+    }
+    var names = PLACES.map(function (p, i) { return (i + 1) + '. ' + p.name; }).join('\n');
+    var pick = prompt('Which landmark are you standing at right now?\n\n' + names +
+                      '\n\nEnter a number, or 0 to clear a previous correction.');
+    if (pick === null) return;
+    var n = parseInt(pick, 10);
+    if (n === 0) {
+      HLGeo.saveCal(null);
+      document.getElementById('calNote').textContent = 'Correction cleared.';
+      renderDistances(); positionMe();
+      return;
+    }
+    var place = PLACES[n - 1];
+    if (!place) { document.getElementById('calNote').textContent = 'That wasn’t one of the numbers.'; return; }
+    HLGeo.saveCal({
+      dLat: place.lat - mapState.fix.lat,
+      dLon: place.lon - mapState.fix.lon,
+      at: place.name,
+    });
+    document.getElementById('calNote').textContent =
+      'Corrected against ' + place.name + '. Everything else should line up better now.';
+    renderDistances(); positionMe();
+  });
+
+  // ── Offline previews ────────────────────────────────────────────
 
   function starredNames() {
     return Object.keys(stars).filter(function (n) { return setsByName[n]; }).sort();
   }
-
-  function shareUrl() {
-    var slugs = starredNames().map(function (n) { return SLUGS[n] || n; });
-    return location.origin + location.pathname + '#picks=' + encodeURIComponent(slugs.join(','));
-  }
-
-  // A shared link merges into whatever you already had — it never wipes your picks.
-  function applySharedPicks() {
-    var m = /[#&]picks=([^&]*)/.exec(location.hash);
-    if (!m) return;
-    var slugToName = {};
-    Object.keys(SLUGS).forEach(function (n) { slugToName[SLUGS[n]] = n; });
-    var added = 0;
-    decodeURIComponent(m[1]).split(',').forEach(function (slug) {
-      var name = slugToName[slug] || (setsByName[slug] ? slug : null);
-      if (name && !stars[name]) { stars[name] = 1; added++; }
-    });
-    if (added) save(STORE_STARS, stars);
-    history.replaceState(null, '', location.pathname);
-    if (added) {
-      setTimeout(function () {
-        alert('Added ' + added + ' artist' + (added === 1 ? '' : 's') +
-              ' from that link to your schedule.');
-      }, 400);
-    }
-  }
-
-  document.getElementById('shareBtn').addEventListener('click', function () {
-    var names = starredNames();
-    if (!names.length) { alert('Star a few artists first.'); return; }
-    var url = shareUrl();
-    var text = 'My Hinterland ’26 lineup (' + names.length + ' acts)';
-    if (navigator.share) {
-      navigator.share({ title: 'Hinterland ’26', text: text, url: url }).catch(function () {});
-    } else if (navigator.clipboard) {
-      navigator.clipboard.writeText(url).then(function () {
-        alert('Link copied — send it to whoever you\'re going with.');
-      });
-    } else {
-      prompt('Copy this link:', url);
-    }
-  });
 
   document.getElementById('cachePreviewsBtn').addEventListener('click', function () {
     var btn = this;
@@ -831,7 +985,7 @@
     renderDayBar();
     if (state.view === 'schedule') renderSchedule();
     if (state.view === 'discover') renderDeck();
-    if (state.view === 'lineup') renderLineup();
+    if (state.view === 'map') renderMap();
     if (state.view === 'info') renderInfo();
   }
 
@@ -862,7 +1016,7 @@
 
   document.getElementById('lineupSearch').addEventListener('input', function (ev) {
     state.search = ev.target.value;
-    renderLineup();
+    renderSchedule();
   });
 
   // Theme
@@ -882,7 +1036,6 @@
     applyTheme(document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
   });
 
-  applySharedPicks();
   render();
 
   // Keep "on now" honest without burning battery.

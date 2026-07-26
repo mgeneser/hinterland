@@ -140,6 +140,66 @@ const SLUGS = {
   'Young Miko': 'young-miko',
 };
 
+// ── Map ───────────────────────────────────────────────────────────
+//
+// IMPORTANT, read before trusting anything here.
+//
+// The festival publishes no coordinates for anything, and OpenStreetMap has
+// essentially nothing for this venue. These positions were derived by
+// georeferencing the official Grounds Map illustration against road geometry
+// (the I-35/G50 interchange is the hard anchor). That means:
+//
+//   * The map is an ILLUSTRATION. It is drawn north-up but vertically stretched
+//     ~1.65x, and it straightens G50, which really bends southwest. Error grows
+//     toward the west end of the site.
+//   * Typical error is ~180 m. That is roughly the width of the concourse.
+//   * The Main Stage MOVED for 2026 — a new permanent stage was built about half
+//     a mile east, from Madison County into Warren County. Its coordinate below
+//     came from mid-construction aerial imagery (April 2025); no post-build
+//     aerial exists anywhere. Confidence is +/-150 m and it is the single riskiest
+//     number in this file.
+//
+// Because of all that, the app treats these as hints, shows an accuracy circle,
+// and lets you tap "I'm standing here" at a known landmark to correct the offset
+// for your device. Do not present any of this as survey data.
+
+const MAP = {
+  image: 'img/grounds-map.jpg',
+  concourse: 'img/concourse-map.jpg',
+  // Pixel space of the source illustration used for the transform below.
+  refWidth: 2600,
+  refHeight: 2167,
+  // Anchor: I-35 / G50 interchange (Exit 52), OSM road geometry, very high confidence.
+  anchor: { px: 2390, py: 1742, lat: 41.2934, lon: -93.7795 },
+  // Anisotropic scale — metres per source pixel.
+  mPerPxX: 0.969,
+  mPerPxY: 0.586,
+  accuracyNoteMetres: 180,
+};
+
+// Landmarks. `confidence` is honest, not decorative — the UI shows it.
+const PLACES = [
+  { id: 'main',      name: 'Main Stage',     kind: 'stage',   lat: 41.29740, lon: -93.78651, confidence: 'low' },
+  { id: 'miniland',  name: 'Miniland Stage', kind: 'stage',   lat: 41.29770, lon: -93.78518, confidence: 'low' },
+  { id: 'campfire',  name: 'Campfire Stage', kind: 'stage',   lat: 41.29666, lon: -93.79925, confidence: 'low' },
+  { id: 'tent',      name: 'Tent Camping',   kind: 'camp',    lat: 41.29560, lon: -93.79734, confidence: 'low' },
+  { id: 'car',       name: 'Car Camping',    kind: 'camp',    lat: 41.29786, lon: -93.80157, confidence: 'low' },
+  { id: 'rv',        name: 'RV Camping',     kind: 'camp',    lat: 41.29197, lon: -93.80016, confidence: 'low' },
+  { id: 'basecamp',  name: 'Basecamp',       kind: 'service', lat: 41.29473, lon: -93.79253, confidence: 'low' },
+  { id: 'ada',       name: 'ADA Camping & Parking', kind: 'service', lat: 41.29495, lon: -93.78871, confidence: 'low' },
+  { id: 'park4day',  name: '4-Day Parking',  kind: 'parking', lat: 41.29216, lon: -93.78219, confidence: 'low' },
+  { id: 'park1day',  name: 'Single Day Parking', kind: 'parking', lat: 41.29955, lon: -93.80097, confidence: 'low' },
+  { id: 'parkprem',  name: 'Premium Parking', kind: 'parking', lat: 41.29252, lon: -93.78792, confidence: 'low' },
+  { id: 'gateC',     name: 'Gate C — Box Office', kind: 'gate', lat: 41.29340, lon: -93.78330, confidence: 'medium' },
+  { id: 'gateF',     name: 'Gate F — ADA',   kind: 'gate',    lat: 41.29368, lon: -93.78654, confidence: 'low' },
+  { id: 'gateH',     name: 'Gate H — Tent Camping', kind: 'gate', lat: 41.29320, lon: -93.79595, confidence: 'low' },
+  { id: 'gateJ',     name: 'Gate J — RV',    kind: 'gate',    lat: 41.29304, lon: -93.79815, confidence: 'low' },
+  { id: 'gateN',     name: 'Gate N — Car Camping', kind: 'gate', lat: 41.29763, lon: -93.80428, confidence: 'medium' },
+];
+
+// Which landmark each stage in the schedule corresponds to.
+const STAGE_PLACE = { main: 'main', miniland: 'miniland', campfire: 'campfire' };
+
 // Artist detail, keyed by exact name as it appears in SETS.
 // Populated by artists.js.
 const ARTISTS = {};
