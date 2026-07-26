@@ -281,8 +281,6 @@
       onclick: function (ev) { ev.stopPropagation(); toggleStar(s.name); },
     }, [starred ? '★' : '☆']);
 
-    var photo = photoFor(s.name);
-
     return el('div', {
       class: cls,
       style: '--slot-color:' + stage.color,
@@ -293,10 +291,7 @@
         if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); openSheet(s.name); }
       },
     }, [
-      photo ? el('img', {
-        class: 'slot-thumb', src: photo, alt: '', loading: 'lazy',
-        width: '76', height: '76',
-      }) : el('div', { class: 'slot-thumb slot-thumb--empty' }),
+      playablePhoto(s.name, 'photo--row'),
       el('div', { class: 'slot-body' }, [
         el('div', { class: 'slot-time' }, [
           el('span', { class: 'slot-start', text: fmtTime(s.start) }),
@@ -323,10 +318,7 @@
 
     sheetBody.textContent = '';
 
-    var photo = photoFor(name);
-    if (photo) {
-      sheetBody.appendChild(el('img', { class: 'sheet-photo', src: photo, alt: '' }));
-    }
+    sheetBody.appendChild(playablePhoto(name, 'photo--sheet'));
 
     sheetBody.appendChild(el('h2', { id: 'sheetName', text: name }));
 
@@ -420,6 +412,26 @@
   // ── Info ────────────────────────────────────────────────────────
 
   function renderInfo() {
+    document.getElementById('basecampBlurb').textContent = BASECAMP.blurb;
+
+    var hours = document.getElementById('basecampHours');
+    hours.textContent = '';
+    BASECAMP.hours.forEach(function (h) {
+      hours.appendChild(el('li', {}, [
+        el('b', { text: h.what }),
+        el('span', { text: h.when }),
+      ]));
+    });
+
+    var am = document.getElementById('basecampAmenities');
+    am.textContent = '';
+    BASECAMP.amenities.forEach(function (a) {
+      am.appendChild(el('li', {}, [
+        el('b', { text: a.name }),
+        el('span', { text: a.note }),
+      ]));
+    });
+
     var total = sets.length;
     var starred = Object.keys(stars).filter(function (n) { return setsByName[n]; }).length;
     var mins = sets.filter(function (s) { return isStarred(s.name); })
@@ -527,224 +539,185 @@
     return null;
   }
 
-  // ── Listen deck ─────────────────────────────────────────────────
+  // ── Inline player ───────────────────────────────────────────────
+  //
+  // There's no separate listening screen. Every artist photo — in the schedule
+  // list and in the detail sheet — doubles as a play button, so hearing an act
+  // never means leaving the place where you're deciding about them.
 
   var audio = new Audio();
   audio.preload = 'none';
-  var deckIdx = 0;
-  var deckMode = 'all';
-  var wantPlaying = false;
+  var nowPlaying = null;   // artist name, or null
 
-  // One entry per artist, ordered by their first set.
-  var deckAll = [];
-  (function () {
-    var seen = {};
-    sets.forEach(function (s) {
-      if (seen[s.name]) return;
-      seen[s.name] = true;
-      deckAll.push(s);
-    });
-  })();
-
-  function deckList() {
-    if (deckMode === 'starred') return deckAll.filter(function (s) { return isStarred(s.name); });
-    if (deckMode === 'undecided') return deckAll.filter(function (s) { return !isStarred(s.name); });
-    return deckAll;
-  }
-
-  var dEl = {};
-  ['deckImg', 'deckName', 'deckGenre', 'deckWhen', 'deckTrack', 'deckBlurb',
-   'deckStar', 'deckPrev', 'deckNext', 'deckCount', 'deckPlay', 'deckPlayIcon',
-   'deckProgress', 'deckCard'].forEach(function (id) {
-    dEl[id] = document.getElementById(id);
-  });
-
-  function renderDeck() {
-    var list = deckList();
-
-    if (!list.length) {
-      dEl.deckCard.style.display = 'none';
-      if (!document.getElementById('deckEmpty')) {
-        document.getElementById('deck').appendChild(el('div', { class: 'empty', id: 'deckEmpty' }, [
-          el('b', { text: 'Nothing here' }),
-          'Star some artists first, or switch back to All.',
-        ]));
-      }
-      return;
-    }
-    dEl.deckCard.style.display = '';
-    var empty = document.getElementById('deckEmpty');
-    if (empty) empty.remove();
-
-    if (deckIdx >= list.length) deckIdx = list.length - 1;
-    if (deckIdx < 0) deckIdx = 0;
-
-    var s = list[deckIdx];
-    var a = ARTISTS[s.name] || {};
-    var day = DAYS.filter(function (d) { return d.id === s.dayId; })[0];
-    var stage = stageById[s.stageId];
-
-    dEl.deckImg.src = photoFor(s.name) || '';
-    dEl.deckImg.alt = s.name;
-    dEl.deckName.textContent = s.name;
-    dEl.deckGenre.textContent = a.genre || '';
-    dEl.deckWhen.textContent = day.label.slice(0, 3) + ' ' + fmtTime(s.start) + ' · ' + stage.name;
-    dEl.deckBlurb.textContent = a.blurb || '';
-    dEl.deckCount.textContent = (deckIdx + 1) + ' of ' + list.length;
-
-    var starred = isStarred(s.name);
-    dEl.deckStar.setAttribute('aria-pressed', starred);
-    dEl.deckStar.textContent = starred ? '★  Starred' : '☆  Star this';
-
-    dEl.deckPrev.disabled = deckIdx === 0;
-    dEl.deckNext.disabled = deckIdx === list.length - 1;
-
-    dEl.deckProgress.style.width = '0';
-    setTrackLabel(s.name);
-    if (wantPlaying) playCurrent();
-    else stopAudio();
-  }
-
-  function setTrackLabel(name) {
-    var cached = previews[name];
-    if (cached) {
-      dEl.deckTrack.textContent = '';
-      dEl.deckTrack.appendChild(el('b', { text: cached.track }));
-      dEl.deckTrack.appendChild(document.createTextNode('  ·  30-second preview'));
-    } else {
-      dEl.deckTrack.textContent = 'Tap play for a 30-second preview';
-    }
-  }
-
-  function currentArtist() {
-    var list = deckList();
-    return list.length ? list[deckIdx].name : null;
+  function isPlaying(name) {
+    return nowPlaying === name && !audio.paused;
   }
 
   function stopAudio() {
     audio.pause();
-    dEl.deckPlayIcon.textContent = '▶';
-    dEl.deckPlay.setAttribute('aria-label', 'Play preview');
+    nowPlaying = null;
+    refreshPlayButtons();
   }
 
-  function playCurrent() {
-    var name = currentArtist();
-    if (!name) return;
-    var retried = false;
+  // Buttons live in two different views, so update by data attribute rather
+  // than holding references that go stale on every re-render.
+  function refreshPlayButtons() {
+    Array.prototype.forEach.call(document.querySelectorAll('[data-play]'), function (btn) {
+      var name = btn.getAttribute('data-play');
+      var on = isPlaying(name);
+      var loading = btn.getAttribute('data-loading') === '1';
+      btn.setAttribute('aria-pressed', on);
+      btn.setAttribute('aria-label', (on ? 'Stop preview of ' : 'Play a preview of ') + name);
+      btn.classList.toggle('is-playing', on);
+      var icon = btn.querySelector('.play-icon');
+      if (icon) icon.textContent = loading ? '\u22ef' : (on ? '\u275a\u275a' : '\u25b6');
+    });
+  }
 
-    dEl.deckPlay.classList.add('is-loading');
-    dEl.deckPlayIcon.textContent = '⋯';
+  function togglePlay(name) {
+    if (isPlaying(name)) { stopAudio(); return; }
+
+    var btns = document.querySelectorAll('[data-play="' + cssEscape(name) + '"]');
+    Array.prototype.forEach.call(btns, function (b) { b.setAttribute('data-loading', '1'); });
+    refreshPlayButtons();
 
     lookupPreview(name).then(function (rec) {
-      dEl.deckPlay.classList.remove('is-loading');
-      if (currentArtist() !== name) return; // user moved on while we fetched
-
+      Array.prototype.forEach.call(document.querySelectorAll('[data-play]'), function (b) {
+        b.removeAttribute('data-loading');
+      });
       if (!rec || !rec.url) {
-        dEl.deckTrack.textContent = navigator.onLine
-          ? 'No preview found for this artist'
-          : 'No signal — previews need a connection';
-        dEl.deckPlayIcon.textContent = '▶';
-        wantPlaying = false;
+        announce(navigator.onLine
+          ? 'No preview found for ' + name
+          : 'Previews need a connection.');
+        refreshPlayButtons();
         return;
       }
-
-      setTrackLabel(name);
-      if (audio.src !== rec.url) audio.src = rec.url;
+      audio.src = rec.url;
+      nowPlaying = name;
       audio.play().then(function () {
-        dEl.deckPlayIcon.textContent = '❚❚';
-        dEl.deckPlay.setAttribute('aria-label', 'Pause preview');
+        refreshPlayButtons();
+        announce('Playing ' + rec.track + ' by ' + name);
       }).catch(function () {
-        // A baked URL can go stale. Forget it and let one live lookup retry.
-        if (!retried) {
-          delete previews[name];
-          return lookupPreview(name).then(function (fresh) {
-            retried = true;
-            if (fresh && fresh.url && currentArtist() === name) {
-              audio.src = fresh.url;
-              return audio.play();
-            }
-            throw new Error('no fresh url');
-          }).then(function () {
-            dEl.deckPlayIcon.textContent = '❚❚';
-          }).catch(function () {
-            dEl.deckPlayIcon.textContent = '▶';
-            wantPlaying = false;
-            dEl.deckTrack.textContent = 'Could not play — tap again';
-          });
-        }
-        dEl.deckPlayIcon.textContent = '▶';
-        wantPlaying = false;
-        dEl.deckTrack.textContent = 'Could not play — tap again';
+        nowPlaying = null;
+        refreshPlayButtons();
+        announce('Could not play that preview.');
       });
     });
   }
 
-  audio.addEventListener('timeupdate', function () {
-    if (!audio.duration) return;
-    dEl.deckProgress.style.width = (audio.currentTime / audio.duration * 100) + '%';
-  });
-
-  // Roll into the next artist when a preview finishes — that's the browse loop.
-  audio.addEventListener('ended', function () {
-    if (deckIdx < deckList().length - 1) { deckIdx++; renderDeck(); }
-    else { wantPlaying = false; stopAudio(); }
-  });
-
-  dEl.deckPlay.addEventListener('click', function () {
-    if (!audio.paused) { wantPlaying = false; stopAudio(); }
-    else { wantPlaying = true; playCurrent(); }
-  });
-
-  function deckGo(delta) {
-    var list = deckList();
-    var next = deckIdx + delta;
-    if (next < 0 || next >= list.length) return;
-    deckIdx = next;
-    renderDeck();
+  // Artist names contain quotes and ampersands; keep selectors valid.
+  function cssEscape(v) {
+    return window.CSS && CSS.escape ? CSS.escape(v) : v.replace(/["\\]/g, '\\$&');
   }
 
-  dEl.deckPrev.addEventListener('click', function () { deckGo(-1); });
-  dEl.deckNext.addEventListener('click', function () { deckGo(1); });
+  function announce(msg) {
+    var live = document.getElementById('playStatus');
+    if (live) live.textContent = msg;
+  }
 
-  dEl.deckStar.addEventListener('click', function () {
-    var name = currentArtist();
-    if (!name) return;
-    // In a filtered deck, starring removes the card — hold position so the
-    // next one slides under your thumb instead of jumping.
-    var filtered = deckMode !== 'all';
-    toggleStar(name);
-    if (filtered) {
-      var list = deckList();
-      if (deckIdx >= list.length) deckIdx = Math.max(0, list.length - 1);
+  audio.addEventListener('ended', function () { nowPlaying = null; refreshPlayButtons(); });
+  audio.addEventListener('pause', refreshPlayButtons);
+
+  // A photo with a play button on it, used by both the list and the sheet.
+  function playablePhoto(name, cls) {
+    var photo = photoFor(name);
+    var track = previews[name] && previews[name].track;
+    return el('div', { class: 'photo ' + cls }, [
+      photo ? el('img', { src: photo, alt: '', loading: 'lazy' })
+            : el('div', { class: 'photo-empty' }),
+      el('button', {
+        class: 'play',
+        'data-play': name,
+        'aria-pressed': 'false',
+        'aria-label': 'Play a preview of ' + name,
+        title: track ? 'Preview: ' + track : 'Play a preview',
+        onclick: function (ev) { ev.stopPropagation(); togglePlay(name); },
+      }, [el('span', { class: 'play-icon', 'aria-hidden': 'true', text: '\u25b6' })]),
+    ]);
+  }
+
+
+  // ── Food & drink ────────────────────────────────────────────────
+
+  var eatsState = { diet: '', search: '' };
+
+  function renderEats() {
+    // Derived, not hardcoded — the count drifts every time a vendor is edited.
+    var uniq = {};
+    VENDORS.forEach(function (v) { uniq[v.name] = 1; });
+    document.getElementById('eatsCount').textContent =
+      Object.keys(uniq).length + ' vendors across ' + AREAS.length + ' areas';
+
+    var list = document.getElementById('eatsList');
+    list.textContent = '';
+
+    var q = eatsState.search.trim().toLowerCase();
+    var matches = VENDORS.filter(function (v) {
+      if (eatsState.diet && v.diet.indexOf(eatsState.diet) === -1) return false;
+      if (!q) return true;
+      return (v.name + ' ' + v.what + ' ' + (v.tag || '') + ' ' + v.from)
+        .toLowerCase().indexOf(q) !== -1;
+    });
+
+    document.getElementById('eatsStatus').textContent =
+      matches.length + ' of ' + VENDORS.length + ' vendors shown.';
+
+    if (!matches.length) {
+      list.appendChild(el('div', { class: 'empty' }, [
+        el('b', { text: 'Nothing matches' }),
+        'Try a different filter, or search for something like “pizza”.',
+      ]));
+      return;
     }
-    renderDeck();
+
+    AREAS.forEach(function (area) {
+      var here = matches.filter(function (v) { return v.area === area.id; });
+      if (!here.length) return;
+      list.appendChild(el('div', { class: 'eats-area' }, [
+        el('span', { text: area.name }),
+        el('small', { text: here.length + (here.length === 1 ? ' vendor' : ' vendors') }),
+      ]));
+      here.forEach(function (v) { list.appendChild(vendorCard(v)); });
+    });
+  }
+
+  function vendorCard(v) {
+    var tags = v.diet.map(function (d) {
+      return el('span', { class: 'diet diet--' + d, text: DIET_LABELS[d] || d });
+    });
+    if (v.tag) tags.unshift(el('span', { class: 'diet diet--tag', text: v.tag }));
+
+    // Iowa vendors are a nice thing to notice at an Iowa festival.
+    var local = /, IA$/.test(v.from);
+
+    return el('div', { class: 'vendor' }, [
+      el('div', { class: 'vendor-top' }, [
+        el('h3', { class: 'vendor-name', text: v.name }),
+        local ? el('span', { class: 'vendor-local', text: 'Iowa' }) : null,
+      ]),
+      el('p', { class: 'vendor-what', text: v.what }),
+      tags.length ? el('div', { class: 'diet-row' }, tags) : null,
+      v.caveat ? el('p', { class: 'vendor-caveat', text: v.caveat }) : null,
+      el('p', { class: 'vendor-from', text: v.from }),
+    ]);
+  }
+
+  document.getElementById('eatsSearch').addEventListener('input', function (ev) {
+    eatsState.search = ev.target.value;
+    renderEats();
   });
 
-  Array.prototype.forEach.call(document.querySelectorAll('[data-deck]'), function (btn) {
+  Array.prototype.forEach.call(document.querySelectorAll('[data-diet]'), function (btn) {
     btn.addEventListener('click', function () {
-      deckMode = btn.dataset.deck;
-      deckIdx = 0;
-      Array.prototype.forEach.call(document.querySelectorAll('[data-deck]'), function (b) {
-        b.classList.toggle('is-active', b === btn);
+      eatsState.diet = btn.dataset.diet;
+      Array.prototype.forEach.call(document.querySelectorAll('[data-diet]'), function (b) {
+        var on = b === btn;
+        b.classList.toggle('is-active', on);
+        b.setAttribute('aria-pressed', on);
       });
-      renderDeck();
+      renderEats();
     });
   });
-
-  // Swipe between cards.
-  (function () {
-    var x0 = null, y0 = null;
-    dEl.deckCard.addEventListener('touchstart', function (ev) {
-      x0 = ev.touches[0].clientX; y0 = ev.touches[0].clientY;
-    }, { passive: true });
-    dEl.deckCard.addEventListener('touchend', function (ev) {
-      if (x0 === null) return;
-      var dx = ev.changedTouches[0].clientX - x0;
-      var dy = ev.changedTouches[0].clientY - y0;
-      x0 = null;
-      if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.5) deckGo(dx < 0 ? 1 : -1);
-    }, { passive: true });
-  })();
 
   // ── Map ─────────────────────────────────────────────────────────
 
@@ -929,7 +902,9 @@
     btn.addEventListener('click', function () {
       mapState.which = btn.dataset.map;
       Array.prototype.forEach.call(document.querySelectorAll('[data-map]'), function (b) {
-        b.classList.toggle('is-active', b === btn);
+        var on = b === btn;
+        b.classList.toggle('is-active', on);
+        b.setAttribute('aria-pressed', on);
       });
       renderMap();
     });
@@ -1015,9 +990,10 @@
   function render() {
     renderDayBar();
     if (state.view === 'schedule') renderSchedule();
-    if (state.view === 'discover') renderDeck();
+    if (state.view === 'eats') renderEats();
     if (state.view === 'map') renderMap();
     if (state.view === 'info') renderInfo();
+    refreshPlayButtons();
   }
 
   // ── Wiring ──────────────────────────────────────────────────────
@@ -1034,7 +1010,8 @@
         v.classList.toggle('is-active', v.id === 'view-' + state.view);
       });
       // Nobody wants a preview still playing after they've walked away.
-      if (state.view !== 'discover') { wantPlaying = false; stopAudio(); }
+      // Leaving a view shouldn't leave audio running in your pocket.
+      stopAudio();
       window.scrollTo(0, 0);
       render();
     });

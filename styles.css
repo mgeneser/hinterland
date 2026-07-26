@@ -1,34 +1,40 @@
 /* Hinterland 2026 — phone-first, readable in direct sun, usable with one thumb. */
 
-/* Palette and type lifted from hinterlandiowa.com: the warm olive-brown ground,
- * cream text, and powder-blue header bar are theirs. Their display face is Migra
- * (commercial), so we follow their own fallback into Palatino/Didot territory —
- * a high-contrast serif with the same poster feel, using fonts already on the
- * phone. Nothing loads from a network: a webfont would defeat offline-first. */
+/* Palette and type taken from hinterlandiowa.com's own design tokens. Their
+ * --colors-all--black (#353329) and --colors-all--dark-gray (#27241b) are the two
+ * browns; --colors-all--blue (#aacbd6) is the masthead band; --off-white
+ * (#fbf6ef) is the cream. The softer peach/sage/powder trio comes from their
+ * arch illustrations, which are lighter than the raw brand tokens.
+ *
+ * Type follows their stack exactly: --type-all-fonts--migra for display, with
+ * Palatino Linotype as the fallback they themselves specify (Migra is
+ * commercial and we load nothing from the network — a webfont would break
+ * offline-first). */
 
 :root {
-  --bg:        #353329;
-  --bg-raised: #3f3c31;
-  --bg-sunk:   #2b291f;
-  --line:      #4e4a3c;      /* decorative card edges */
-  --line-strong: #807c6e;    /* borders that convey state — meets 3:1 per WCAG 1.4.11 */
+  --bg:        #27241b;      /* their dark-gray — the deeper brown */
+  --bg-raised: #353329;      /* their black */
+  --bg-sunk:   #1e1c15;
+  --line:      #45412f;      /* decorative card edges */
+  --line-strong: #7d7868;    /* borders that convey state — meets 3:1 per WCAG 1.4.11 */
   --text:      #fbf6ef;
-  --text-dim:  #c3bcab;
-  --text-mute: #aca596;      /* 4.51:1 on raised — do not darken */
+  --text-dim:  #cec7b4;
+  --text-mute: #a8a192;
   --accent:    #aacbd6;
   --accent-ink:#22201a;
   --accent-dim:#5d7d89;
   --star:      #e8c88a;
-  --main:      #f7b192;
-  --miniland:  #8fc0a0;
-  --campfire:  #9fa4cc;
 
-  /* Two serif roles, deliberately. Didot's hairlines look like the festival
-   * poster but go spidery below ~24px, so it is reserved for the masthead.
-   * Iowan Old Style is sturdy, warm, ships on iOS/macOS — and is, aptly, named
-   * for the state. Artist names in scannable lists use the sans: they get read
-   * at a glance, in the sun, often at arm's length. */
-  --serif-display: Didot, "Bodoni 72", "Playfair Display", Georgia, serif;
+  /* Illustration trio — peach, sage, powder. Also the stage colours. */
+  --peach:     #f5c4ac;
+  --sage:      #8fc0a0;
+  --powder:    #b8cceb;
+  --on-peach:  #27241b;      /* ink for a filled-peach chip */
+  --main:      var(--peach);
+  --miniland:  var(--sage);
+  --campfire:  var(--powder);
+
+  --serif-display: Migra, "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
   --serif-text: "Iowan Old Style", Palatino, "Palatino Linotype", "Book Antiqua", Georgia, serif;
   --sans: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
 
@@ -38,21 +44,27 @@
 }
 
 :root[data-theme="light"] {
-  --bg:        #fbf6ef;
+  --bg:        #fbf6ef;      /* their off-white */
   --bg-raised: #ffffff;
-  --bg-sunk:   #f1eade;
-  --line:      #ded4c2;
+  --bg-sunk:   #f0eddf;      /* near their cream #e5e6d9 */
+  --line:      #ddd6c2;
   --line-strong: #988e7c;
-  --text:      #2c2a22;
+  --text:      #27241b;      /* their dark-gray, as ink */
   --text-dim:  #5f5949;
-  --text-mute: #7d7666;
+  --text-mute: #6f6858;      /* 4.5:1 on the cream bg, not just on white */
   --accent:    #3f6a7c;
   --accent-ink:#ffffff;
   --accent-dim:#a8c3ce;
   --star:      #a8802e;
-  --main:      #b3602d;
-  --miniland:  #35704e;
-  --campfire:  #55588c;
+  /* Illustration tints are too pale to read as text on cream, so on light
+   * backgrounds the stage colours drop to darker relatives of the same hues. */
+  --peach:     #ae5b28;      /* 4.51:1 on the cream bg */
+  --sage:      #35704e;
+  --powder:    #4a5891;
+  --on-peach:  #ffffff;
+  --main:      var(--peach);
+  --miniland:  var(--sage);
+  --campfire:  var(--powder);
 }
 
 * { box-sizing: border-box; }
@@ -349,16 +361,6 @@ body {
   white-space: nowrap;
 }
 
-.slot-thumb {
-  flex: none;
-  width: 84px;
-  height: auto;
-  align-self: stretch;
-  object-fit: cover;
-  background: var(--bg-sunk);
-  display: block;
-}
-.slot-thumb--empty { min-height: 84px; }
 
 .slot-body {
   flex: 1;
@@ -429,162 +431,6 @@ body {
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-}
-
-/* ── Listen deck ─────────────────────────────────────────────── */
-
-.deck-filter {
-  display: flex;
-  gap: 6px;
-  padding: 12px 16px 4px;
-}
-.pill {
-  flex: 1;
-  min-height: var(--tap);
-  border: 1px solid var(--line-strong);
-  border-radius: 99px;
-  background: var(--bg-raised);
-  color: var(--text-mute);
-  font: inherit;
-  font-size: 13px;
-  font-weight: 650;
-  cursor: pointer;
-}
-.pill.is-active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-
-.deck { padding: 8px 16px 40px; }
-
-.deck-card { touch-action: pan-y; }
-
-.deck-photo {
-  position: relative;
-  aspect-ratio: 1;
-  border-radius: 3px;
-  overflow: hidden;
-  background: var(--bg-sunk);
-}
-.deck-photo img {
-  width: 100%; height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.deck-shade {
-  position: absolute; inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.35) 34%, transparent 62%);
-}
-.deck-overlay {
-  position: absolute;
-  left: 16px; right: 74px; bottom: 14px;
-  color: #fff;
-}
-.deck-when {
-  font-size: 12px;
-  font-weight: 750;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.82);
-  margin-bottom: 3px;
-}
-.deck-name {
-  margin: 0;
-  font-family: var(--serif-text);
-  font-size: 32px;
-  font-weight: 400;
-  letter-spacing: -0.005em;
-  line-height: 1.1;
-  text-shadow: 0 1px 12px rgba(0,0,0,0.5);
-  overflow-wrap: anywhere;
-}
-.deck-genre { font-size: 13.5px; color: rgba(255,255,255,0.88); margin-top: 3px; }
-
-.deck-play {
-  position: absolute;
-  right: 14px; bottom: 14px;
-  width: 56px; height: 56px;
-  border: 0;
-  border-radius: 50%;
-  background: #fbf6ef;
-  color: #2b291f;
-  font-size: 19px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 3px 14px rgba(0,0,0,0.35);
-}
-.deck-play:active { transform: scale(0.92); }
-.deck-play.is-loading { color: var(--text-mute); }
-
-.deck-progress {
-  position: absolute;
-  left: 0; right: 0; bottom: 0;
-  height: 3px;
-  background: rgba(255,255,255,0.18);
-}
-.deck-progress i {
-  display: block;
-  height: 100%;
-  width: 0;
-  background: var(--accent);
-}
-
-.deck-track {
-  margin-top: 12px;
-  font-size: 13px;
-  color: var(--text-mute);
-  min-height: 19px;
-}
-.deck-track b { color: var(--text-dim); font-weight: 650; }
-
-.deck-blurb {
-  margin: 8px 0 0;
-  font-size: 15px;
-  line-height: 1.5;
-  color: var(--text-dim);
-}
-
-.deck-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 16px;
-}
-.deck-nav {
-  width: 52px; height: 50px;
-  flex: none;
-  border: 1px solid var(--line-strong);
-  border-radius: 3px;
-  background: var(--bg-raised);
-  color: var(--text-dim);
-  font-size: 24px;
-  line-height: 1;
-  cursor: pointer;
-}
-.deck-nav:disabled { opacity: 0.35; }
-.deck-star {
-  flex: 1;
-  height: 50px;
-  border: 1px solid var(--line-strong);
-  border-radius: 3px;
-  background: var(--bg-raised);
-  color: var(--text-dim);
-  font: inherit;
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-}
-.deck-star[aria-pressed="true"] {
-  background: var(--star);
-  border-color: var(--star);
-  color: #2b291f;
-}
-
-.deck-count {
-  margin-top: 11px;
-  text-align: center;
-  font-size: 12.5px;
-  color: var(--text-mute);
-  font-variant-numeric: tabular-nums;
 }
 
 /* ── Action buttons ──────────────────────────────────────────── */
@@ -707,16 +553,6 @@ body {
   font-size: 21px;
   line-height: 1;
   cursor: pointer;
-}
-
-.sheet-photo {
-  width: 100%;
-  aspect-ratio: 16 / 10;
-  object-fit: cover;
-  border-radius: 3px;
-  background: var(--bg-sunk);
-  margin-bottom: 14px;
-  display: block;
 }
 
 .sheet h2 {
@@ -908,3 +744,271 @@ body {
 }
 .dist-name { display: block; font-size: 15.5px; font-weight: 650; }
 .dist-meta { display: block; font-size: 13px; color: var(--text-mute); margin-top: 1px; }
+
+
+/* ── Playable photo ──────────────────────────────────────────────
+ * Every artist image is also the play control. One component, used in the
+ * schedule rows and in the detail sheet, so there's no separate listening
+ * screen to walk to. */
+
+.photo {
+  position: relative;
+  background: var(--bg-sunk);
+  flex: none;
+  overflow: hidden;
+}
+.photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.photo-empty { width: 100%; height: 100%; }
+
+.photo--row {
+  width: 84px;
+  align-self: stretch;
+}
+.photo--sheet {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 3px;
+  margin-bottom: 14px;
+}
+
+/* The button covers the image so the whole thumbnail is the target — well over
+ * the 44px minimum even though the visible disc is smaller. */
+.play {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #fbf6ef;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.play-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: rgba(30, 28, 21, 0.62);
+  box-shadow: inset 0 0 0 1.5px rgba(251, 246, 239, 0.9);
+  font-size: 11px;
+  line-height: 1;
+  padding-left: 2px;   /* optically centre the triangle */
+  backdrop-filter: blur(2px);
+}
+.photo--sheet .play-icon { width: 56px; height: 56px; font-size: 19px; }
+.play:active .play-icon { transform: scale(0.9); }
+.play.is-playing .play-icon {
+  background: var(--accent);
+  color: var(--accent-ink);
+  box-shadow: inset 0 0 0 1.5px var(--accent);
+  padding-left: 0;
+}
+
+/* ── Arch section headers ────────────────────────────────────────
+ * Drawn to echo the festival's art-nouveau arch illustrations — tulip buds,
+ * paired frame lines, sprouting leaves — in their peach/sage palette. Ours are
+ * hand-drawn SVG rather than their artwork, so they recolour with the theme. */
+
+.arch-head {
+  text-align: center;
+  padding: 18px 16px 4px;
+}
+.arch {
+  display: block;
+  width: 104px;
+  height: auto;
+  margin: 0 auto 4px;
+}
+.arch .a-frame { stroke: var(--peach); }
+.arch .a-leaf  { stroke: var(--sage); }
+.arch .a-bud   { stroke: var(--peach); fill: var(--powder); }
+
+.arch-title {
+  margin: 0;
+  font-family: var(--serif-display);
+  font-size: 30px;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  color: var(--sage);
+}
+.arch-sub {
+  margin: 2px 0 0;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+}
+
+/* ── Food & drink ────────────────────────────────────────────────── */
+
+.diet-filter {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 16px 12px;
+  scrollbar-width: none;
+}
+.diet-filter::-webkit-scrollbar { display: none; }
+
+.chip-btn {
+  flex: none;
+  min-height: var(--tap);
+  padding: 0 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: 99px;
+  background: var(--bg-raised);
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 650;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.chip-btn.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+.eats { padding: 0 12px 24px; }
+
+.eats-area {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 18px 6px 8px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 8px;
+}
+.eats-area span {
+  font-family: var(--serif-text);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--peach);
+}
+.eats-area small { font-size: 12px; color: var(--text-mute); white-space: nowrap; }
+
+.vendor {
+  padding: 12px 14px;
+  margin-bottom: 6px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--sage);
+  border-radius: 3px;
+  background: var(--bg-raised);
+}
+.vendor-top {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.vendor-name {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 650;
+  line-height: 1.25;
+}
+.vendor-local {
+  flex: none;
+  padding: 1px 7px;
+  border-radius: 99px;
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--sage);
+  color: var(--sage);
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.vendor-what { margin: 5px 0 0; font-size: 14px; color: var(--text-dim); line-height: 1.45; }
+.vendor-caveat { margin: 6px 0 0; font-size: 12.5px; color: var(--text-mute); font-style: italic; }
+.vendor-from { margin: 6px 0 0; font-size: 12px; color: var(--text-mute); }
+
+.diet-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.diet {
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 11.5px;
+  font-weight: 650;
+  background: var(--bg-sunk);
+  color: var(--text-dim);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.diet--v, .diet--veg { color: var(--sage); box-shadow: inset 0 0 0 1px var(--sage); }
+.diet--gf, .diet--df { color: var(--powder); box-shadow: inset 0 0 0 1px var(--powder); }
+.diet--tag {
+  background: var(--peach);
+  color: var(--on-peach);   /* flips with the theme — peach is light in dark mode, dark in light */
+  box-shadow: none;
+}
+
+/* ── Basecamp lists ──────────────────────────────────────────────── */
+
+.hours-list, .amenity-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+.hours-list li, .amenity-list li { font-size: 14px; }
+.hours-list b, .amenity-list b {
+  display: block;
+  color: var(--text);
+  font-size: 14.5px;
+  font-weight: 650;
+  margin-bottom: 2px;
+}
+.hours-list span, .amenity-list span { color: var(--text-dim); line-height: 1.45; }
+
+/* ── Segmented control (map switcher) ────────────────────────────
+ * Named for what it does, not for the deck it used to live next to. */
+
+.seg {
+  display: flex;
+  gap: 6px;
+  padding: 12px 16px 4px;
+}
+.seg-btn {
+  flex: 1;
+  min-height: var(--tap);
+  border: 1px solid var(--line-strong);
+  border-radius: 99px;
+  background: var(--bg-raised);
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.seg-btn.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+/* Standalone links that behave like buttons get a real target. Links sitting
+ * inline inside a sentence keep their natural size — WCAG 2.5.8 exempts those,
+ * and padding them out would wreck the paragraph. */
+.link-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: var(--tap);
+  padding: 0 12px;
+  margin-top: 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 14.5px;
+  font-weight: 650;
+}
+.link-row:active { transform: scale(0.99); }

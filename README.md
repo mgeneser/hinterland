@@ -13,13 +13,15 @@ by starring acts. Its main job is answering *"can we go back to the camper for a
   Flip on **My schedule only** and it collapses to just your starred acts with the
   free time between them spelled out (`~2h 15m free`). Overlapping picks get an
   **Overlap** badge so you know you have a decision to make.
-- **Listen** — swipe through all 48 artists: press photo, blurb, and a 30-second
-  preview. Star straight from the card. Filter to *Not starred* to work through
-  the ones you haven't decided on.
+  Every artist photo is also a play button — tap it for a 30-second preview
+  without leaving the list.
+- **Eats** — all 30 food and drink vendors grouped by area, searchable, with
+  filters for vegan / vegetarian / gluten-free / dairy-free / nut-free. Iowa
+  vendors are flagged.
 - **Map** — the official grounds and concourse maps, plus where you are, which way
   you're facing, and how far it is to each stage, gate, and camping area. See
   **Map accuracy** below before trusting the dot.
-- **Info** — save previews for offline, stage key, and the caveats.
+- **Info** — Basecamp hours and amenities, your stats, stage key, and the caveats.
 
 Each phone keeps its own schedule. Stars live in `localStorage`; there are no
 accounts, no server, and nothing is shared between devices.
@@ -79,6 +81,7 @@ Then open the Pages URL on your phone → Share → **Add to Home Screen**.
 | --- | --- |
 | `data.js` | Set times, stages, days, artist→slug map, map transform, landmarks. |
 | `artists.js` | Genre, origin, blurb, sounds-like, key tracks per artist. |
+| `grounds.js` | Food & drink vendors and Basecamp hours/amenities. |
 | `map.js` | Distance/bearing maths and the lat/lon → map-pixel projection. |
 | `app.js` | All behaviour — schedule, deck, previews, stars, map. |
 | `sw.js` | Service worker. **Bump `CACHE` after editing any precached file.** |
@@ -146,3 +149,27 @@ sent anywhere.
 
 Data from [hinterlandiowa.com](https://www.hinterlandiowa.com/). Previews via the
 iTunes Search API. Not affiliated with the festival.
+
+## Design notes
+
+Palette and type come from hinterlandiowa.com's own design tokens rather than
+being eyeballed from screenshots: `--colors-all--dark-gray` (#27241b) and
+`--colors-all--black` (#353329) are the two browns, `--colors-all--blue`
+(#aacbd6) is the masthead band, `--off-white` (#fbf6ef) the cream. The softer
+peach / sage / powder trio is sampled from their art-nouveau arch illustrations.
+
+Type follows their stack exactly — `Migra, "Palatino Linotype", sans-serif` for
+display, Helvetica-family for body. Migra is commercial and nothing is loaded
+from the network (a webfont would break offline-first), so it resolves to the
+Palatino fallback they specify themselves. Artist names in scannable lists use
+the system sans, not a serif: they get read at a glance, in the sun, at arm's
+length.
+
+The arch section headers are hand-drawn SVG in the style of their illustrations,
+not their artwork — so they recolour with the theme and add nothing to the
+payload.
+
+Every colour pair is checked against WCAG AA with a script rather than by eye,
+including the awkward ones: filled chips whose ink has to flip between themes,
+and borders that convey state (1.4.11 wants 3:1, which is why there are separate
+`--line` and `--line-strong` tokens).

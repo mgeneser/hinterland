@@ -6,7 +6,7 @@
 <title>Hinterland 2026</title>
 <meta name="description" content="Lineup, set times, and your own schedule for Hinterland Music Festival 2026.">
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1b1714">
+<meta name="theme-color" content="#aacbd6">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Hinterland">
@@ -42,10 +42,12 @@
 
 <nav class="tabs" role="tablist" aria-label="Sections">
   <button class="tab is-active" role="tab" aria-selected="true" aria-controls="view-schedule" id="tab-schedule" data-view="schedule">Schedule</button>
-  <button class="tab" role="tab" aria-selected="false" aria-controls="view-discover" id="tab-discover" data-view="discover">Listen</button>
+  <button class="tab" role="tab" aria-selected="false" aria-controls="view-eats" id="tab-eats" data-view="eats">Eats</button>
   <button class="tab" role="tab" aria-selected="false" aria-controls="view-map" id="tab-map" data-view="map">Map</button>
   <button class="tab" role="tab" aria-selected="false" aria-controls="view-info" id="tab-info" data-view="info">Info</button>
 </nav>
+
+<p id="playStatus" class="sr-only" role="status" aria-live="polite"></p>
 
 <!-- ── Schedule ─────────────────────────────────────────────────── -->
 <main id="view-schedule" class="view is-active" role="tabpanel" aria-labelledby="tab-schedule" tabindex="0">
@@ -68,48 +70,52 @@
   <div id="scheduleList" class="schedule"></div>
 </main>
 
-<!-- ── Listen / discover deck ───────────────────────────────────── -->
-<main id="view-discover" class="view" role="tabpanel" aria-labelledby="tab-discover" tabindex="0">
-  <div class="deck-filter">
-    <button class="pill is-active" data-deck="all">All 48</button>
-    <button class="pill" data-deck="undecided">Not starred</button>
-    <button class="pill" data-deck="starred">My picks</button>
+<!-- ── Food & drink ─────────────────────────────────────────────── -->
+<main id="view-eats" class="view" role="tabpanel" aria-labelledby="tab-eats" tabindex="0">
+  <div class="arch-head">
+    <svg class="arch" viewBox="0 0 120 78" aria-hidden="true" focusable="false">
+      <g fill="none" stroke-linecap="round" stroke-width="1.6">
+        <path class="a-frame" d="M22 76V34a38 38 0 0 1 76 0v42"/>
+        <path class="a-frame" d="M14 76V34a46 46 0 0 1 92 0v42"/>
+        <circle class="a-bud" cx="60" cy="12" r="4"/>
+        <path class="a-leaf" d="M28 76V52c0-7 5-12 10-12M92 76V52c0-7-5-12-10-12"/>
+        <path class="a-leaf" d="M38 40c-4-4-4-11 0-15 4 4 4 11 0 15zM82 40c4-4 4-11 0-15-4 4-4 11 0 15z"/>
+        <path class="a-frame" d="M46 30c0-6 6-10 14-10s14 4 14 10"/>
+        <path class="a-leaf" d="M52 62h16M56 68h8"/>
+      </g>
+    </svg>
+    <h2 class="arch-title">Food &amp; Drink</h2>
+    <p class="arch-sub" id="eatsCount"></p>
   </div>
 
-  <div id="deck" class="deck">
-    <div class="deck-card" id="deckCard">
-      <div class="deck-photo">
-        <img id="deckImg" alt="" width="320" height="320">
-        <div class="deck-shade"></div>
-        <div class="deck-overlay">
-          <div class="deck-when" id="deckWhen"></div>
-          <h2 class="deck-name" id="deckName"></h2>
-          <div class="deck-genre" id="deckGenre"></div>
-        </div>
-        <button class="deck-play" id="deckPlay" aria-label="Play preview">
-          <span id="deckPlayIcon">▶</span>
-        </button>
-        <div class="deck-progress"><i id="deckProgress"></i></div>
-      </div>
+  <div class="controls controls--search">
+    <input type="search" id="eatsSearch" class="search" placeholder="Search food, e.g. tacos, mac, coffee" aria-label="Search food and drink">
+  </div>
 
-      <div class="deck-track" id="deckTrack"></div>
-      <p class="deck-blurb" id="deckBlurb"></p>
+  <div class="diet-filter" role="group" aria-label="Filter by dietary option">
+    <button class="chip-btn is-active" data-diet="">Everything</button>
+    <button class="chip-btn" data-diet="v">Vegan</button>
+    <button class="chip-btn" data-diet="veg">Vegetarian</button>
+    <button class="chip-btn" data-diet="gf">Gluten-free</button>
+    <button class="chip-btn" data-diet="df">Dairy-free</button>
+    <button class="chip-btn" data-diet="nf">Nut-free</button>
+  </div>
 
-      <div class="deck-actions">
-        <button class="deck-nav" id="deckPrev" aria-label="Previous artist">‹</button>
-        <button class="deck-star" id="deckStar" aria-pressed="false" aria-label="Star this artist"></button>
-        <button class="deck-nav" id="deckNext" aria-label="Next artist">›</button>
-      </div>
-      <div class="deck-count" id="deckCount"></div>
-    </div>
+  <p id="eatsStatus" class="sr-only" role="status" aria-live="polite"></p>
+  <div id="eatsList" class="eats"></div>
+
+  <div class="info-wrap">
+    <section class="card">
+      <p class="muted">Diet labels are the festival's own claims, repeated here so you can find a stall — not an allergen guarantee. Always ask at the window. Vendor line-ups change; check the official page if something matters.</p>
+    </section>
   </div>
 </main>
 
 <!-- ── Map ──────────────────────────────────────────────────────── -->
 <main id="view-map" class="view" role="tabpanel" aria-labelledby="tab-map" tabindex="0">
-  <div class="deck-filter" role="group" aria-label="Which map">
-    <button class="pill is-active" data-map="grounds">Grounds</button>
-    <button class="pill" data-map="concourse">Concourse</button>
+  <div class="seg" role="group" aria-label="Which map">
+    <button class="seg-btn is-active" data-map="grounds" aria-pressed="true">Grounds</button>
+    <button class="seg-btn" data-map="concourse" aria-pressed="false">Concourse</button>
   </div>
 
   <div class="map-wrap">
@@ -145,26 +151,45 @@
   </div>
 </main>
 
-<!-- ── Info ─────────────────────────────────────────────────────── -->
+<!-- ── Info: Basecamp + practical ───────────────────────────────── -->
 <main id="view-info" class="view" role="tabpanel" aria-labelledby="tab-info" tabindex="0">
+  <div class="arch-head">
+    <svg class="arch" viewBox="0 0 120 78" aria-hidden="true" focusable="false">
+      <g fill="none" stroke-linecap="round" stroke-width="1.6">
+        <path class="a-frame" d="M18 76V32a42 42 0 0 1 84 0v44"/>
+        <path class="a-frame" d="M10 76V32a50 50 0 0 1 100 0v44"/>
+        <path class="a-bud" d="M60 8c-5 0-8 3-8 7s3 6 8 6 8-2 8-6-3-7-8-7z"/>
+        <path class="a-leaf" d="M34 76V56h52v20"/>
+        <path class="a-leaf" d="M34 56l6-8h40l6 8"/>
+        <path class="a-frame" d="M46 76V64h12v12"/>
+        <path class="a-leaf" d="M24 76V50c0-6 4-10 9-10M96 76V50c0-6-4-10-9-10"/>
+      </g>
+    </svg>
+    <h2 class="arch-title">Basecamp</h2>
+    <p class="arch-sub">The hub in the campgrounds</p>
+  </div>
+
   <div class="info-wrap">
+    <section class="card">
+      <p id="basecampBlurb"></p>
+    </section>
+
+    <section class="card">
+      <h2>Hours</h2>
+      <ul class="hours-list" id="basecampHours"></ul>
+    </section>
+
+    <section class="card">
+      <h2>What's there</h2>
+      <ul class="amenity-list" id="basecampAmenities"></ul>
+    </section>
+
     <section class="card">
       <h2>Your festival</h2>
       <div id="statBlock" class="stats"></div>
-    </section>
-
-    <section class="card">
-      <h2>My picks</h2>
-      <p>Your stars are saved on this phone. Everyone who installs the app keeps their own separate schedule.</p>
       <button class="action" id="cachePreviewsBtn">Save my previews for offline</button>
       <p class="muted" id="cacheStatus">Previews stream from Apple, so they need signal. Save them on wifi and they’ll play at the campsite.</p>
       <button class="action action--quiet" id="clearBtn">Clear all my stars</button>
-    </section>
-
-    <section class="card">
-      <h2>Set times</h2>
-      <p>Start times come from the official Hinterland set times page. <strong>End times are estimates</strong> — the festival doesn’t publish them. Anywhere you see a <span class="tilde">~</span>, that time was worked out from when the next act starts on the same stage, so treat it as a rough guide, not a promise.</p>
-      <p>Times shown are your phone’s local time. In St. Charles that’s Central.</p>
     </section>
 
     <section class="card">
@@ -173,15 +198,17 @@
     </section>
 
     <section class="card">
-      <h2>Offline</h2>
-      <p>This app caches itself the first time you open it, so the lineup and your stars work with no signal. Reception at the amphitheater is famously bad — open it once on wifi before you go.</p>
-      <p class="muted">Your stars are stored on this device only. They aren’t synced anywhere, so clearing your browser data will clear them.</p>
+      <h2>Set times &amp; offline</h2>
+      <p>Start times come from the official set times page. <strong>End times are estimates</strong> — the festival doesn’t publish them. Anywhere you see a <span class="tilde">~</span>, that time was worked out from when the next act starts on the same stage. Times are your phone’s local time, which is Central at the festival.</p>
+      <p>The app caches itself on first open, so the lineup, photos and maps work with no signal. Reception at the amphitheater is famously bad — open it once on wifi before you go.</p>
+      <p class="muted">Your stars are stored on this device only, and aren’t synced anywhere.</p>
     </section>
 
     <section class="card">
       <h2>Data</h2>
-      <p>Set times pulled from <a href="https://www.hinterlandiowa.com/set-times-2026" rel="noopener">hinterlandiowa.com</a> on July 25, 2026. If the festival shuffles the schedule after that, this app won’t know.</p>
-      <p><a href="https://www.hinterlandiowa.com/" rel="noopener">Official site →</a></p>
+      <p>Set times, vendors, maps and Basecamp details from <a href="https://www.hinterlandiowa.com/" rel="noopener">hinterlandiowa.com</a>, captured July 25, 2026. If the festival changes anything after that, this app won’t know.</p>
+      <a class="link-row" href="https://www.hinterlandiowa.com/food-drink" rel="noopener">Official food &amp; drink <span aria-hidden="true">→</span></a>
+      <a class="link-row" href="https://www.hinterlandiowa.com/info/basecamp-2" rel="noopener">Official Basecamp page <span aria-hidden="true">→</span></a>
     </section>
   </div>
 </main>
@@ -198,6 +225,7 @@
 <script src="data.js"></script>
 <script src="artists.js"></script>
 <script src="previews.js"></script>
+<script src="grounds.js"></script>
 <script src="map.js"></script>
 <script src="app.js"></script>
 </body>
