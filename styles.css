@@ -583,6 +583,15 @@ body {
   line-height: 1;
   cursor: pointer;
 }
+/* Same trick as the masthead toggle: drawn at 38px so it doesn't dominate the
+ * photo, but tappable at 44px. */
+.sheet-close::after {
+  content: "";
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 44px; height: 44px;
+  transform: translate(-50%, -50%);
+}
 
 .sheet h2 {
   margin: 0 0 4px;
