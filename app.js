@@ -429,7 +429,7 @@
 
     if (a.uncertain) {
       sheetBody.appendChild(el('p', { class: 'note', text:
-        'Details for this act were hard to pin down — treat them as rough.' }));
+        'Limited information was available for this act.' }));
     }
 
     // Pager. Swiping does the same thing; these exist because a swipe is
@@ -1444,7 +1444,7 @@
         el('span', { class: 'dist-name', text: spot.label }),
         el('span', { class: 'dist-meta', text: meta }),
         age.stale ? el('span', { class: 'stale-note',
-          text: 'Old enough that they have probably moved.' }) : null,
+          text: 'This location may no longer be current.' }) : null,
         el('button', {
           class: 'spot-forget', 'aria-label': 'Forget the spot from ' + spot.label,
           onclick: function () {
@@ -1550,6 +1550,13 @@
   // which keeps the after-midnight stretch attached to the night it belongs to.
 
   var DAY_LABEL = { wed: 'Wednesday', thu: 'Thursday', fri: 'Friday', sat: 'Saturday', sun: 'Sunday' };
+  var DAY_SHORT = { wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun' };
+
+  function closeRun(run) {
+    var label = run.start === run.end ? DAY_SHORT[run.start]
+              : DAY_SHORT[run.start] + '\u2013' + DAY_SHORT[run.end];
+    return [label, run.text];
+  }
 
   function fmtHour(h) {
     var hh = ((h % 24) + 24) % 24;
@@ -1597,19 +1604,34 @@
     var heading = document.getElementById('hoursHeading');
     openList.textContent = ''; todayList.textContent = ''; allList.textContent = '';
 
-    // Full weekend, always available for planning.
+    // A table, not a paragraph. Consecutive days with identical hours collapse
+    // into a range, so the bar reads "Thu–Sat" on one line instead of repeating
+    // the same times three times over.
     BASECAMP.hours.forEach(function (item) {
       var rows = [];
-      if (item.allDay) rows.push('Every day, 24 hours');
-      else if (item.varies) rows.push('Hours vary');
-      else {
+      if (item.allDay) {
+        rows.push(['Daily', '24 hours']);
+      } else if (item.varies) {
+        rows.push(['', 'Hours vary']);
+      } else {
+        var run = null;
         ['wed', 'thu', 'fri', 'sat', 'sun'].forEach(function (d) {
-          if (item.windows[d]) rows.push(DAY_LABEL[d] + ' ' + fmtWindows(item.windows[d]));
+          var w = item.windows[d];
+          var text = w ? fmtWindows(w) : null;
+          if (!text) { if (run) { rows.push(closeRun(run)); run = null; } return; }
+          if (run && run.text === text) { run.end = d; }
+          else { if (run) rows.push(closeRun(run)); run = { start: d, end: d, text: text }; }
         });
+        if (run) rows.push(closeRun(run));
       }
-      allList.appendChild(el('li', {}, [
+
+      allList.appendChild(el('li', { class: 'hours-item' }, [
         el('b', { text: item.what }),
-        el('span', { text: rows.join(' · ') }),
+        el('div', { class: 'hours-grid' }, rows.reduce(function (acc, r) {
+          acc.push(el('span', { class: 'hours-when', text: r[0] }));
+          acc.push(el('span', { class: 'hours-time', text: r[1] }));
+          return acc;
+        }, [])),
         item.note ? el('span', { class: 'hours-note', text: item.note }) : null,
       ]));
     });
@@ -1644,9 +1666,9 @@
       if (item.allDay) text = '24 hours';
       else if (item.varies) text = 'Hours vary';
       else text = item.windows[dayId] ? fmtWindows(item.windows[dayId]) : 'Closed today';
-      todayList.appendChild(el('li', {}, [
+      todayList.appendChild(el('li', { class: 'hours-item' }, [
         el('b', { text: item.what }),
-        el('span', { text: text }),
+        el('span', { class: 'hours-time', text: text }),
         item.note ? el('span', { class: 'hours-note', text: item.note }) : null,
       ]));
     });
