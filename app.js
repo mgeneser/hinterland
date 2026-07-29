@@ -982,6 +982,7 @@
   var mapState = { which: 'grounds', fix: null, heading: null, watchId: null, calibrating: false };
 
   function renderMap() {
+    renderSpots();
     var img = document.getElementById('mapImg');
     var want = mapState.which === 'concourse' ? MAP.concourse : MAP.image;
     if (img.getAttribute('src') !== want) img.setAttribute('src', want);
@@ -1020,6 +1021,8 @@
     ring.style.width = ringPct + '%';
     ring.style.paddingBottom = ringPct + '%';
 
+    drawSpotPins();
+
     var cone = document.getElementById('meCone');
     if (mapState.heading === null) {
       cone.hidden = true;
@@ -1027,6 +1030,27 @@
       cone.hidden = false;
       cone.style.transform = 'translate(-50%, -100%) rotate(' + mapState.heading + 'deg)';
     }
+  }
+
+  // Pins for shared spots. Same projection as your own dot, so they inherit the
+  // illustration's distortion — which is why the distance readout, computed from
+  // raw lat/lon, is the number to trust.
+  function drawSpotPins() {
+    var stage = document.getElementById('mapStage');
+    Array.prototype.forEach.call(stage.querySelectorAll('.spot-pin'), function (n) { n.remove(); });
+    if (mapState.which !== 'grounds') return;
+
+    spots.forEach(function (spot) {
+      var px = HLGeo.lonLatToPx(spot.lat, spot.lon);
+      var xPct = px.x / MAP.refWidth * 100, yPct = px.y / MAP.refHeight * 100;
+      if (xPct < -8 || xPct > 108 || yPct < -8 || yPct > 108) return;
+      var pin = el('div', { class: 'spot-pin' + (spotAge(spot).stale ? ' is-stale' : ''),
+                            style: 'left:' + xPct + '%;top:' + yPct + '%',
+                            title: spot.label + ' — sent ' + spotAge(spot).text }, [
+        el('span', { class: 'spot-label', text: spot.label }),
+      ]);
+      stage.appendChild(pin);
+    });
   }
 
   function renderDistances() {
@@ -1108,6 +1132,7 @@
                '. The map itself is only good to ~180 m — see below.'));
       positionMe();
       renderDistances();
+      renderSpots();   // shared spots need the new fix to show distance too
       document.getElementById('locBtn').textContent = 'Stop using my location';
     }, function (err) {
       setStatus(err.code === 1
@@ -1127,6 +1152,7 @@
     setStatus('Location is off. Nothing is sent anywhere — it stays on your phone.');
     positionMe();
     renderDistances();
+    renderSpots();
   }
 
   // iOS requires an explicit, gesture-triggered grant for the compass.
@@ -1196,6 +1222,137 @@
     document.getElementById('calNote').textContent =
       'Corrected against ' + place.name + '. Everything else should line up better now.';
     renderDistances(); positionMe();
+  });
+
+
+  // ── Send my spot ────────────────────────────────────────────────
+  //
+  // The honest alternative to live friend-tracking. Live location needs a server
+  // AND a working connection on both phones, and the venue's network is the
+  // exact thing this app is built around not having — it would fail precisely
+  // when you're separated. A spot instead needs one text to get through once.
+  //
+  // The trade is that a spot is a snapshot, so everything here is built around
+  // saying how old it is rather than pretending it's live.
+
+  var STORE_SPOTS = 'hinterland26.spots';
+  var spots = load(STORE_SPOTS, []);
+
+  // Five decimal places is about a metre — far finer than the GPS fix itself,
+  // and keeps the link short enough to survive any messaging app.
+  function encodeSpot(fix, label) {
+    var mins = Math.round(Date.now() / 60000);
+    var parts = [fix.lat.toFixed(5), fix.lon.toFixed(5), mins];
+    if (label) parts.push(encodeURIComponent(label));
+    return location.origin + location.pathname + '#spot=' + parts.join(',');
+  }
+
+  function readIncomingSpot() {
+    var m = /[#&]spot=([^&]+)/.exec(location.hash);
+    if (!m) return null;
+    var p = decodeURIComponent(m[1]).split(',');
+    var lat = parseFloat(p[0]), lon = parseFloat(p[1]), mins = parseInt(p[2], 10);
+    if (isNaN(lat) || isNaN(lon)) return null;
+    return {
+      lat: lat, lon: lon,
+      at: isNaN(mins) ? Date.now() : mins * 60000,
+      label: p[3] ? decodeURIComponent(p[3]) : 'A friend',
+    };
+  }
+
+  function absorbSpot() {
+    var spot = readIncomingSpot();
+    history.replaceState(null, '', location.pathname);
+    if (!spot) return;
+
+    // Replace an earlier spot from the same person rather than stacking them up.
+    spots = spots.filter(function (s) { return s.label !== spot.label; });
+    spots.unshift(spot);
+    spots = spots.slice(0, 6);
+    save(STORE_SPOTS, spots);
+
+    state.view = 'map';
+    setTimeout(function () {
+      var t = document.getElementById('tab-map');
+      if (t) t.click();
+      announce(spot.label + ' shared a spot with you.');
+    }, 300);
+  }
+
+  function spotAge(spot) {
+    var mins = Math.max(0, Math.round((Date.now() - spot.at) / 60000));
+    if (mins < 1) return { text: 'just now', stale: false };
+    if (mins < 60) return { text: mins + ' min ago', stale: mins > 20 };
+    var h = Math.floor(mins / 60);
+    return { text: h + 'h ' + (mins % 60) + 'm ago', stale: true };
+  }
+
+  function renderSpots() {
+    var wrap = document.getElementById('spotsWrap');
+    var ul = document.getElementById('spotsList');
+    if (!spots.length) { wrap.hidden = true; return; }
+    wrap.hidden = false;
+    ul.textContent = '';
+
+    var fix = mapState.fix ? HLGeo.correct(mapState.fix) : null;
+
+    spots.forEach(function (spot, i) {
+      var age = spotAge(spot);
+      var meta;
+      if (fix) {
+        var m = HLGeo.distanceM(fix, spot);
+        var bearing = HLGeo.bearingDeg(fix, spot);
+        var rel = '';
+        if (mapState.heading !== null) {
+          var d = ((bearing - mapState.heading + 540) % 360) - 180;
+          if (Math.abs(d) < 25) rel = 'straight ahead';
+          else if (Math.abs(d) > 155) rel = 'behind you';
+          else rel = (d > 0 ? 'to your right' : 'to your left');
+        }
+        meta = HLGeo.fmtDistance(m) + ' · ' + HLGeo.walkMinutes(m) + ' min walk · ' +
+               (rel || HLGeo.compass(bearing));
+      } else {
+        meta = 'Turn on your location to get distance and direction';
+      }
+
+      ul.appendChild(el('li', { class: 'dist-row' + (age.stale ? ' dist-row--stale' : '') }, [
+        el('span', { class: 'dist-tag', text: 'Sent ' + age.text }),
+        el('span', { class: 'dist-name', text: spot.label }),
+        el('span', { class: 'dist-meta', text: meta }),
+        age.stale ? el('span', { class: 'stale-note',
+          text: 'Old enough that they have probably moved.' }) : null,
+        el('button', {
+          class: 'spot-forget', 'aria-label': 'Forget the spot from ' + spot.label,
+          onclick: function () {
+            spots.splice(i, 1);
+            save(STORE_SPOTS, spots);
+            renderSpots();
+            positionMe();
+          },
+        }, ['Forget']),
+      ]));
+    });
+  }
+
+  document.getElementById('spotBtn').addEventListener('click', function () {
+    if (!mapState.fix) {
+      setStatus('Turn on your location first, then send your spot.');
+      return;
+    }
+    var label = prompt('Who is this from? (shown to whoever you send it to)', 'Me');
+    if (label === null) return;
+    var url = encodeSpot(HLGeo.correct(mapState.fix), label.trim() || 'A friend');
+    var text = (label.trim() || 'I') + ' — here is where I am at Hinterland';
+
+    if (navigator.share) {
+      navigator.share({ title: 'My spot', text: text, url: url }).catch(function () {});
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(function () {
+        setStatus('Link copied. Paste it to whoever you are meeting.');
+      });
+    } else {
+      prompt('Send this link:', url);
+    }
   });
 
   // ── Offline previews ────────────────────────────────────────────
@@ -1320,6 +1477,12 @@
     applyTheme(document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
   });
 
+  absorbSpot();   // a link may be carrying someone's location
+
+  // Tapping a spot link while the app is already open only changes the hash —
+  // no reload, so init never runs again. At a festival that is the LIKELY case:
+  // you're in the app, a text arrives, you tap it.
+  window.addEventListener('hashchange', absorbSpot);
   render();
 
   document.addEventListener('visibilitychange', function () {
@@ -1335,6 +1498,7 @@
   // Keep "on now" honest without burning battery.
   setInterval(function () {
     if (state.view === 'schedule') { renderSchedule(); updateNowBtn(); }
+    if (state.view === 'map') renderSpots();     // "sent 12 min ago" must keep counting
   }, 60000);
 
   // Service worker — offline is the whole point at this venue.

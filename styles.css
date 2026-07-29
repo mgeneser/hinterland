@@ -1200,3 +1200,72 @@ body {
   padding: 8px;
   image-rendering: pixelated;   /* keep module edges crisp when scaled */
 }
+
+/* ── Shared spots ────────────────────────────────────────────────
+ * Visually distinct from your own position, and visibly degraded once old —
+ * a confident pin for a stale fix is the failure mode worth designing against. */
+
+.spot-pin {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.spot-pin::after {
+  content: "";
+  width: 12px; height: 12px;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  background: var(--star);
+  border: 2px solid #27241b;
+  margin-top: 1px;
+}
+.spot-label {
+  max-width: 90px;
+  padding: 1px 6px;
+  border-radius: 99px;
+  background: var(--star);
+  color: #27241b;
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.spot-pin.is-stale { opacity: 0.55; }
+.spot-pin.is-stale::after { background: var(--text-mute); }
+.spot-pin.is-stale .spot-label { background: var(--text-mute); }
+
+.dist-row--stale { border-color: var(--line); opacity: 0.85; }
+.dist-row--stale .dist-tag { color: var(--text-mute); }
+.stale-note {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  font-style: italic;
+  color: var(--text-mute);
+}
+
+.spot-forget {
+  margin-top: 8px;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--text-mute);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 650;
+  cursor: pointer;
+  position: relative;
+}
+.spot-forget::after {
+  content: "";
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 100%; height: 44px;
+  transform: translate(-50%, -50%);
+}

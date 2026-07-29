@@ -122,7 +122,14 @@
 
   <div class="map-controls">
     <button class="action" id="locBtn">Show where I am</button>
+    <button class="action" id="spotBtn">Send my spot</button>
     <p class="muted" id="locStatus" role="status" aria-live="polite">Location is off. Nothing is sent anywhere — it stays on your phone.</p>
+  </div>
+
+  <div id="spotsWrap" class="map-nav" hidden>
+    <h2 class="map-h">Spots people sent you</h2>
+    <ul class="dist-list" id="spotsList"></ul>
+    <p class="note">A spot is where someone stood when they tapped send, not where they are now.</p>
   </div>
 
   <div id="mapNav" class="map-nav" hidden>

@@ -216,8 +216,31 @@ That has consequences you should not gloss over:
 - The concourse map is a schematic with no external reference points, so the app
   deliberately **refuses to draw your position on it** rather than guessing.
 
-Location is requested only when you tap the button, is never stored, and is never
-sent anywhere.
+Location is requested only when you tap the button, and is never sent anywhere by
+the app itself.
+
+### Send my spot
+
+The honest alternative to live friend-tracking. Live location needs a server *and*
+a working connection on both phones, and the venue's network is the exact thing
+this app is built around not having — it would fail precisely when you are
+separated and need it. A spot needs one message to get through, once.
+
+Tapping **Send my spot** builds a link with your coordinates and a timestamp in
+the fragment and hands it to the share sheet. Opening someone's link stores it on
+your device and shows distance, walking time and direction to it, plus a pin on
+the map. Nothing goes to a server; the coordinates travel inside the link you
+choose to send, to the person you choose to send it to.
+
+Because a spot is a snapshot, everything about it is built to say so:
+
+- The age is always shown, and it keeps counting while the app is open.
+- After 20 minutes it is greyed, the pin dims, and it says outright that they
+  have probably moved.
+- The **distance and bearing** come from raw lat/lon, so they are as good as the
+  two GPS fixes. The **pin on the map** additionally inherits the illustration's
+  ~180 m distortion. Trust the number over the dot.
+- Resending replaces that person's previous spot rather than stacking up a trail.
 
 Data from [hinterlandiowa.com](https://www.hinterlandiowa.com/). Previews via the
 iTunes Search API. Not affiliated with the festival.
