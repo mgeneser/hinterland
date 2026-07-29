@@ -23,7 +23,10 @@ by starring acts. Its main job is answering *"can we go back to the camper for a
   list of gates and parking, saving your camp, sending your spot, calibration and
   the accuracy notes — sits behind two collapsed disclosures. See **Map accuracy**
   below before trusting the dot.
-- **Info** — Basecamp hours and amenities, your stats, stage key, and the caveats.
+- **Info** — Basecamp, with the hours visible because "is the bar still open" is
+  what this tab actually gets asked, plus the QR to share the app. What else is at
+  Basecamp, your picks and offline settings, and the stage key / set-time caveats /
+  sourcing all sit behind collapsed disclosures.
 
 Each phone keeps its own schedule. Stars live in `localStorage`; there are no
 accounts, no server, and nothing is shared between devices.

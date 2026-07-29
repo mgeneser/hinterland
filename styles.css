@@ -1379,3 +1379,22 @@ body {
 .more-body { padding: 12px 14px 14px; }
 .more-body .map-h { margin-top: 4px; }
 .more-actions { display: grid; gap: 8px; margin-bottom: 4px; }
+
+/* Basecamp intro sits outside a card — it's orientation, not a section. */
+.basecamp-blurb {
+  margin: 0 0 12px;
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+
+/* Hours are the reason to open this tab, so make them scannable rather than
+ * paragraph-shaped. */
+.hours-list li { display: grid; gap: 1px; }
+.hours-list b { font-size: 14.5px; }
+.hours-list span { font-size: 13.5px; line-height: 1.45; }
+
+.more-body .stats { margin-bottom: 12px; }
+.more-body .stage-key { margin-bottom: 14px; }
+.more-body p { margin: 0 0 10px; font-size: 14px; color: var(--text-dim); }
+.more-body .link-row { margin-top: 8px; }

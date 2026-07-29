@@ -169,55 +169,52 @@
   </div>
 
   <div class="info-wrap">
-    <section class="card">
-      <p id="basecampBlurb"></p>
-    </section>
+    <p class="basecamp-blurb" id="basecampBlurb"></p>
 
-    <section class="card card--share">
-      <h2>Share the app</h2>
-      <p>Point a camera at this. It works with no signal — the code is stored on your phone, not fetched.</p>
-      <img class="qr" src="img/qr.png" alt="QR code linking to this app at mgeneser.github.io/hinterland" width="600" height="600">
-      <button class="action" id="shareAppBtn">Send the link instead</button>
-    </section>
-
+    <!-- Hours stay visible: "is the bar still open" is the one question this
+         tab gets asked on the ground. -->
     <section class="card">
       <h2>Hours</h2>
       <ul class="hours-list" id="basecampHours"></ul>
     </section>
 
-    <section class="card">
-      <h2>What's there</h2>
-      <ul class="amenity-list" id="basecampAmenities"></ul>
+    <section class="card card--share">
+      <h2>Share the app</h2>
+      <img class="qr" src="img/qr.png" alt="QR code linking to this app at mgeneser.github.io/hinterland" width="600" height="600">
+      <button class="action" id="shareAppBtn">Send the link instead</button>
     </section>
+  </div>
 
-    <section class="card">
-      <h2>Your festival</h2>
+  <details class="more">
+    <summary>What else is at Basecamp</summary>
+    <div class="more-body">
+      <ul class="amenity-list" id="basecampAmenities"></ul>
+    </div>
+  </details>
+
+  <details class="more">
+    <summary>My picks &amp; offline</summary>
+    <div class="more-body">
       <div id="statBlock" class="stats"></div>
       <button class="action" id="cachePreviewsBtn">Save my previews for offline</button>
       <p class="muted" id="cacheStatus">Previews stream from Apple, so they need signal. Save them on wifi and they’ll play at the campsite.</p>
       <button class="action action--quiet" id="clearBtn">Clear all my stars</button>
-    </section>
+    </div>
+  </details>
 
-    <section class="card">
-      <h2>Stages</h2>
+  <details class="more">
+    <summary>Stages, set times &amp; where this comes from</summary>
+    <div class="more-body">
       <ul class="stage-key" id="stageKey"></ul>
-    </section>
-
-    <section class="card">
-      <h2>Set times &amp; offline</h2>
-      <p>Start times come from the official set times page. <strong>End times are estimates</strong> — the festival doesn’t publish them. Anywhere you see a <span class="tilde">~</span>, that time was worked out from when the next act starts on the same stage. Times are your phone’s local time, which is Central at the festival.</p>
-      <p>The app caches itself on first open, so the lineup, photos and maps work with no signal. Reception at the amphitheater is famously bad — open it once on wifi before you go.</p>
-      <p class="muted">Your stars are stored on this device only, and aren’t synced anywhere.</p>
-    </section>
-
-    <section class="card">
-      <h2>Data</h2>
-      <p>A fan-made guide, not affiliated with the festival. Set times, vendors, maps and Basecamp details from <a href="https://www.hinterlandiowa.com/" rel="noopener">hinterlandiowa.com</a>, captured July 25, 2026. If the festival changes anything after that, this app won’t know.</p>
+      <p>Start times are official. <strong>End times are estimates</strong> — the festival doesn’t publish them, so anything with a <span class="tilde">~</span> was worked out from when the next act starts on the same stage. Times are your phone’s local time, which is Central at the festival.</p>
+      <p>The app caches itself on first open, so everything except song previews works with no signal.</p>
+      <p>A fan-made guide, not affiliated with the festival. Data from <a href="https://www.hinterlandiowa.com/" rel="noopener">hinterlandiowa.com</a>, captured July 25, 2026.</p>
+      <p class="muted" id="buildInfo"></p>
       <a class="link-row" href="https://www.hinterlandiowa.com/food-drink" rel="noopener">Official food &amp; drink <span aria-hidden="true">→</span></a>
       <a class="link-row" href="https://www.hinterlandiowa.com/info/basecamp-2" rel="noopener">Official Basecamp page <span aria-hidden="true">→</span></a>
-      <p class="muted" id="buildInfo"></p>
-    </section>
-  </div>
+    </div>
+  </details>
+
 </main>
 
 <!-- ── Artist detail sheet ──────────────────────────────────────── -->
