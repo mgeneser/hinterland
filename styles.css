@@ -1108,3 +1108,55 @@ body {
 @keyframes slideFromLeft  { from { transform: translateX(-22px); opacity: 0.25 } }
 .sheet-panel.slide-l { animation: slideFromRight 0.18s ease-out; }
 .sheet-panel.slide-r { animation: slideFromLeft 0.18s ease-out; }
+
+/* ── Jump to now ─────────────────────────────────────────────────
+ * Floating rather than inline: it only exists during the festival, and only
+ * while the current set is off screen, so it must not reserve layout space the
+ * rest of the time. */
+
+.now-btn {
+  position: fixed;
+  left: 50%;
+  bottom: calc(18px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: var(--tap);
+  padding: 0 20px;
+  border: 1px solid var(--accent);
+  border-radius: 99px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font: inherit;
+  font-size: 14.5px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+.now-btn[hidden] { display: none; }
+.now-btn:active { transform: translateX(-50%) scale(0.96); }
+
+/* "Next up" reads differently from "On now" — outlined rather than filled, so
+ * the thing actually playing stays the loudest element in the row. */
+.badge-next {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 99px;
+  background: transparent;
+  box-shadow: inset 0 0 0 1px currentColor;
+  color: var(--accent);
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Brief confirmation that the jump landed, since a smooth scroll can otherwise
+ * leave you unsure which row was the target. */
+@keyframes flashRow {
+  0%, 100% { box-shadow: 0 0 0 0 transparent; }
+  15%, 70% { box-shadow: 0 0 0 2px var(--accent); }
+}
+.slot.flash { animation: flashRow 1.4s ease-out; }

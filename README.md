@@ -150,6 +150,12 @@ is wrong" from "you are on a stale cache".
   Everywhere an estimate is shown it's prefixed with `~`. Don't miss a headliner
   over a guessed number.
 - **Times are your phone's local time**, which is Central at the festival.
+- **A "Jump to now" button** appears during the festival and scrolls to whatever
+  is playing this minute. It reads "Jump to next" between sets, and hides itself
+  when that row is already on screen so it never covers the list for no reason.
+  If your filter or search has hidden the exact set, it lands on the nearest
+  showing row by time rather than clearing your filter out from under you.
+  The next set is badged **Next up** so a jump made between sets explains itself.
 - **The Schedule opens on today** once the festival starts, and today overrides
   whatever day you last tapped — otherwise a stray tap on Sunday back in July
   would still be showing Sunday on the Friday. Outside the festival the

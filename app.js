@@ -242,6 +242,9 @@
       });
     });
 
+    var cur = currentSet();
+    nextUpId = (cur && now < cur.start) ? cur.id : null;
+
     sheetOrder = shown.map(function (x) { return x.name; });
 
     var prev = null;
@@ -267,6 +270,21 @@
     void day;
   }
 
+  // Which set is "now", or the next one starting if nothing is on. Null outside
+  // the festival. Returns the set object so callers can use its id and day.
+  function currentSet() {
+    var today = festivalDayFor(new Date());
+    if (!today) return null;
+    var now = new Date();
+    var todays = sets.filter(function (x) { return x.dayId === today; });
+    var live = todays.filter(function (x) { return now >= x.start && now < x.end; })[0];
+    if (live) return live;
+    var next = todays.filter(function (x) { return x.start > now; })[0];
+    return next || todays[todays.length - 1] || null;
+  }
+
+  var nextUpId = null;
+
   function renderSlot(s, now, hasConflict) {
     var stage = stageById[s.stageId];
     var artist = ARTISTS[s.name];
@@ -278,6 +296,7 @@
 
     var meta = [el('span', { class: 'slot-stage', text: stage.name })];
     if (live) meta.push(el('span', { class: 'badge-now', text: 'On now' }));
+    else if (nextUpId === s.id) meta.push(el('span', { class: 'badge-next', text: 'Next up' }));
     if (hasConflict) meta.push(el('span', { class: 'conflict', text: 'Overlap' }));
     if (artist && artist.genre) meta.push(el('span', { class: 'slot-genre', text: artist.genre }));
 
@@ -290,6 +309,7 @@
 
     return el('div', {
       class: cls,
+      'data-set-id': s.id,
       style: '--slot-color:' + stage.color,
       role: 'button',
       tabindex: '0',
@@ -863,6 +883,82 @@
     });
   });
 
+
+  // ── Jump to now ─────────────────────────────────────────────────
+  //
+  // Opening on the right day is only half of it; during the festival what you
+  // want is the row for whatever is happening this minute. The button hides
+  // itself when that row is already on screen, so it never sits over the list
+  // for no reason.
+
+  var nowBtn = document.getElementById('nowBtn');
+  var nowBtnLabel = document.getElementById('nowBtnLabel');
+
+  function jumpToNow() {
+    var cur = currentSet();
+    if (!cur) return;
+
+    if (state.day !== cur.dayId) {
+      state.day = cur.dayId;
+      save(STORE_DAY, cur.dayId);
+      render();
+    }
+
+    var row = document.querySelector('[data-set-id="' + cur.id + '"]');
+
+    // The exact set can be filtered out by "my schedule only" or a search. Rather
+    // than clearing someone's filter under them, land on the nearest row that IS
+    // showing, by time.
+    if (!row) {
+      var rows = [].slice.call(document.querySelectorAll('#scheduleList [data-set-id]'));
+      for (var i = 0; i < rows.length; i++) {
+        var s = sets.filter(function (x) { return x.id === rows[i].getAttribute('data-set-id'); })[0];
+        if (s && s.start >= cur.start) { row = rows[i]; break; }
+      }
+      if (!row) row = rows[rows.length - 1];
+    }
+    if (!row) return;
+
+    row.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    row.classList.add('flash');
+    setTimeout(function () { row.classList.remove('flash'); }, 1400);
+
+    var status = document.getElementById('scheduleStatus');
+    if (status) {
+      var nm = row.querySelector('.slot-name');
+      status.textContent = 'Jumped to ' + (nm ? nm.textContent : 'now') + '.';
+    }
+  }
+
+  function updateNowBtn() {
+    var cur = currentSet();
+    if (!cur || state.view !== 'schedule') { nowBtn.hidden = true; return; }
+
+    nowBtnLabel.textContent = (new Date() < cur.start) ? 'Jump to next' : 'Jump to now';
+
+    // Hide it when the target row is already comfortably in view.
+    var row = document.querySelector('[data-set-id="' + cur.id + '"]');
+    if (row) {
+      var r = row.getBoundingClientRect();
+      var visible = r.top > 60 && r.bottom < window.innerHeight - 60;
+      nowBtn.hidden = visible;
+      return;
+    }
+    // Filtered out but the festival is on — still offer the jump.
+    nowBtn.hidden = state.day !== cur.dayId ? false : false;
+  }
+
+  nowBtn.addEventListener('click', function () {
+    jumpToNow();
+    setTimeout(updateNowBtn, 700);
+  });
+
+  var nowBtnTick = null;
+  window.addEventListener('scroll', function () {
+    if (nowBtnTick) return;
+    nowBtnTick = setTimeout(function () { nowBtnTick = null; updateNowBtn(); }, 150);
+  }, { passive: true });
+
   // ── Map ─────────────────────────────────────────────────────────
 
   var mapState = { which: 'grounds', fix: null, heading: null, watchId: null, calibrating: false };
@@ -1138,6 +1234,7 @@
     if (state.view === 'map') renderMap();
     if (state.view === 'info') renderInfo();
     refreshPlayButtons();
+    updateNowBtn();
   }
 
   // ── Wiring ──────────────────────────────────────────────────────
@@ -1202,7 +1299,7 @@
 
   // Keep "on now" honest without burning battery.
   setInterval(function () {
-    if (state.view === 'schedule') renderSchedule();
+    if (state.view === 'schedule') { renderSchedule(); updateNowBtn(); }
   }, 60000);
 
   // Service worker — offline is the whole point at this venue.

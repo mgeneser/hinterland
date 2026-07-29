@@ -57,6 +57,12 @@
 
   <p id="scheduleStatus" class="sr-only" role="status" aria-live="polite"></p>
   <div id="scheduleList" class="schedule"></div>
+
+  <!-- Only appears during the festival, and only when the current set is not
+       already on screen. -->
+  <button id="nowBtn" class="now-btn" hidden>
+    <span aria-hidden="true">↓</span> <span id="nowBtnLabel">Jump to now</span>
+  </button>
 </main>
 
 <!-- ── Food & drink ─────────────────────────────────────────────── -->
