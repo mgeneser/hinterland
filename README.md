@@ -30,6 +30,20 @@ Works with no signal. The app shell and all 48 photos are precached on first loa
 so it opens instantly in a field. Song previews stream from Apple and need a
 connection — hit **Save my previews for offline** on wifi to keep your starred ones.
 
+Previews are meant for deciding, so nothing has to be starred first: tap any
+artist photo and it plays. Two things make that reliable and both are easy to
+reintroduce:
+
+- **`play()` must be called in the same synchronous task as the tap.** iOS Safari
+  revokes the user-gesture token at the end of that task, so awaiting anything
+  first — even an already-resolved promise — gets the playback blocked. Every
+  preview URL is baked into `previews.js` and seeded at load precisely so the
+  common path needs no `await`.
+- **The button state has to come from media events, not from the call site.**
+  `audio.paused` is still `true` in the moment after `play()` is called, so
+  painting the buttons there always shows the idle glyph. `play`, `playing`,
+  `pause`, `ended`, `waiting` and `stalled` all refresh them.
+
 ## How many people can use it
 
 There is no server, no database and no shared state, so nothing in the app itself

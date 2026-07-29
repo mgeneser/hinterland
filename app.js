@@ -577,37 +577,58 @@
   function togglePlay(name) {
     if (isPlaying(name)) { stopAudio(); return; }
 
-    var btns = document.querySelectorAll('[data-play="' + cssEscape(name) + '"]');
-    Array.prototype.forEach.call(btns, function (b) { b.setAttribute('data-loading', '1'); });
-    refreshPlayButtons();
+    // iOS Safari only honours audio.play() while the user-gesture token is still
+    // live, which means the SAME synchronous task as the tap. Awaiting anything
+    // first — even an already-resolved promise — pushes play() into a microtask
+    // and Safari blocks it. The blocked attempt still marks the element as
+    // interacted-with, so a second tap works, which made this look like "previews
+    // only start after you star an artist".
+    //
+    // Every preview is baked into previews.js and seeded at load, so the URL is
+    // available synchronously. Play straight from it, no await.
+    var rec = previews[name];
+    if (rec && rec.url) {
+      startPlayback(name, rec);
+      return;
+    }
 
-    lookupPreview(name).then(function (rec) {
-      Array.prototype.forEach.call(document.querySelectorAll('[data-play]'), function (b) {
-        b.removeAttribute('data-loading');
-      });
-      if (!rec || !rec.url) {
+    // Only reached if a baked entry is missing. This needs the network, so the
+    // gesture is unavoidably lost and iOS may need a second tap.
+    setLoading(name, true);
+    lookupPreview(name).then(function (fresh) {
+      setLoading(name, false);
+      if (fresh && fresh.url) startPlayback(name, fresh);
+      else {
         announce(navigator.onLine
           ? 'No preview found for ' + name
           : 'Previews need a connection.');
         refreshPlayButtons();
-        return;
       }
-      audio.src = rec.url;
-      nowPlaying = name;
-      audio.play().then(function () {
-        refreshPlayButtons();
-        announce('Playing ' + rec.track + ' by ' + name);
-      }).catch(function () {
-        nowPlaying = null;
-        refreshPlayButtons();
-        announce('Could not play that preview.');
-      });
     });
   }
 
-  // Artist names contain quotes and ampersands; keep selectors valid.
-  function cssEscape(v) {
-    return window.CSS && CSS.escape ? CSS.escape(v) : v.replace(/["\\]/g, '\\$&');
+  function startPlayback(name, rec) {
+    if (audio.src !== rec.url) audio.src = rec.url;
+    nowPlaying = name;
+    refreshPlayButtons();               // paint the pause state immediately
+    var attempt = audio.play();
+    if (!attempt || !attempt.catch) return;
+    attempt.then(function () {
+      announce('Playing ' + rec.track + ' by ' + name);
+    }).catch(function () {
+      nowPlaying = null;
+      refreshPlayButtons();
+      announce('Could not play that preview — tap again.');
+    });
+  }
+
+  function setLoading(name, on) {
+    Array.prototype.forEach.call(document.querySelectorAll('[data-play]'), function (b) {
+      if (b.getAttribute('data-play') !== name) return;
+      if (on) b.setAttribute('data-loading', '1');
+      else b.removeAttribute('data-loading');
+    });
+    refreshPlayButtons();
   }
 
   function announce(msg) {
@@ -615,8 +636,16 @@
     if (live) live.textContent = msg;
   }
 
-  audio.addEventListener('ended', function () { nowPlaying = null; refreshPlayButtons(); });
-  audio.addEventListener('pause', refreshPlayButtons);
+  // isPlaying() reads audio.paused, which is still true in the moment right after
+  // play() is called — so painting the buttons at that point always shows the
+  // idle glyph. These events are what make the pause state actually appear;
+  // without a 'play' listener the audio ran with no visible feedback at all.
+  ['play', 'playing', 'pause', 'ended', 'waiting', 'stalled'].forEach(function (ev) {
+    audio.addEventListener(ev, function () {
+      if (ev === 'ended') nowPlaying = null;
+      refreshPlayButtons();
+    });
+  });
 
   // A photo with a play button on it, used by both the list and the sheet.
   function playablePhoto(name, cls) {
