@@ -419,6 +419,17 @@
   function renderInfo() {
     document.getElementById('basecampBlurb').textContent = BASECAMP.blurb;
 
+    // Which build is actually running. Without this, "it still doesn't work" is
+    // impossible to tell apart from "you're on a stale cached copy".
+    var build = document.getElementById('buildInfo');
+    if (build && window.caches) {
+      caches.keys().then(function (names) {
+        var app = names.filter(function (n) { return n.indexOf('hinterland-v') === 0; })[0];
+        build.textContent = 'Build ' + (app || 'not cached yet') +
+          (audioUnlocked ? ' · audio ready' : ' · audio not yet unlocked');
+      }).catch(function () {});
+    }
+
     var hours = document.getElementById('basecampHours');
     hours.textContent = '';
     BASECAMP.hours.forEach(function (h) {
@@ -552,7 +563,36 @@
 
   var audio = new Audio();
   audio.preload = 'none';
+  audio.setAttribute('playsinline', '');   // iOS otherwise wants fullscreen for media
   var nowPlaying = null;   // artist name, or null
+
+  // iOS keeps an Audio element locked until it has played once inside a real
+  // user gesture. Until that happens every play() is refused, no matter how
+  // synchronous the call is — which is why previews needed a second tap.
+  // Priming it with a fraction of a second of silence on the very first touch
+  // unlocks it for the rest of the session.
+  var SILENCE = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
+  var audioUnlocked = false;
+
+  function unlockAudio() {
+    if (audioUnlocked) return;
+    audioUnlocked = true;
+    try {
+      audio.src = SILENCE;
+      var p = audio.play();
+      if (p && p.then) {
+        p.then(function () {
+          // Only stop the silence — by now a real preview may already be running.
+          if (audio.src === SILENCE) { audio.pause(); audio.currentTime = 0; }
+        }).catch(function () { /* still locked; the real tap will try again */ });
+      }
+    } catch (e) { /* nothing to do */ }
+  }
+
+  // touchstart fires before click, so the element is unlocked by the time a tap
+  // on a play button reaches togglePlay.
+  document.addEventListener('touchstart', unlockAudio, { passive: true });
+  document.addEventListener('mousedown', unlockAudio);
 
   function isPlaying(name) {
     return nowPlaying === name && !audio.paused;
