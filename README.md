@@ -103,6 +103,8 @@ Then open the Pages URL on your phone → Share → **Add to Home Screen**.
 | `tools/fetch-photos.sh` | Re-downloads artist photos and shrinks them to 320px. |
 | `tools/fetch-previews.js` | Regenerates `previews.js` from the iTunes Search API. |
 | `tools/make-icons.py` | Regenerates the app icons from a festival illustration. |
+| `tools/make-qr.sh` | Regenerates `img/qr.png`, the share code. |
+| `sun.js` | Sunset and golden hour at the venue, computed offline. |
 
 ### If the schedule changes
 
@@ -150,6 +152,15 @@ is wrong" from "you are on a stale cache".
   Everywhere an estimate is shown it's prefixed with `~`. Don't miss a headliner
   over a guessed number.
 - **Times are your phone's local time**, which is Central at the festival.
+- **Golden hour is marked in the schedule**, computed from the venue's coordinates
+  with NOAA's solar equations — arithmetic, not an API, so it works with no
+  signal. Sunset is 8:34 PM on Thursday drifting to 8:31 PM by Sunday, which puts
+  **beabadoobee and Jessie Murph in the golden-hour slot** and every headliner
+  just after dark. Sanity-checked against a published figure for Des Moines.
+- **The share QR is a build-time asset**, not generated at runtime. The URL never
+  changes, so encoding it live is pointless work — and a subtly wrong encoder
+  produces a code that looks correct and refuses to scan, which is worse than
+  none. `tools/make-qr.sh` fetches it; verify it decodes before shipping.
 - **A "Jump to now" button** appears during the festival and scrolls to whatever
   is playing this minute. It reads "Jump to next" between sets, and hides itself
   when that row is already on screen so it never covers the list for no reason.

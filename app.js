@@ -247,6 +247,16 @@
 
     sheetOrder = shown.map(function (x) { return x.name; });
 
+    // Golden hour, worked out from the venue's coordinates. Inserted as a marker
+    // in the run of sets rather than as a badge, because what matters is
+    // *when the light changes* relative to what you're watching.
+    var sun = null;
+    try {
+      var mainPlace = PLACES.filter(function (p) { return p.id === 'main'; })[0];
+      sun = HLSun.forDate(day.date, mainPlace.lat, mainPlace.lon);
+    } catch (e) { sun = null; }
+    var goldenDone = false;
+
     var prev = null;
     shown.forEach(function (s) {
       // In "my schedule" mode, show the free time between your sets —
@@ -258,6 +268,14 @@
             el('span', { text: '~' + fmtDuration(gapMins) + ' free' }),
           ]));
         }
+      }
+      if (sun && !goldenDone && sun.goldenStart && s.start >= sun.goldenStart) {
+        list.appendChild(el('div', { class: 'golden' }, [
+          el('span', { class: 'golden-icon', 'aria-hidden': 'true', text: '\u2600' }),
+          el('span', { text: 'Golden hour ' + fmtTime(sun.goldenStart) +
+            ' \u00b7 sunset ' + fmtTime(sun.sunset) }),
+        ]));
+        goldenDone = true;
       }
       list.appendChild(renderSlot(s, now, conflicting[s.id]));
       prev = s;
@@ -1216,6 +1234,23 @@
       }).catch(function () { wait(350).then(function () { step(i + 1); }); });
     }
     step(0);
+  });
+
+  document.getElementById('shareAppBtn').addEventListener('click', function () {
+    var url = location.origin + location.pathname;
+    var data = { title: 'Hinterland \u201926', text: 'Set times, previews and a map for Hinterland', url: url };
+    if (navigator.share) {
+      navigator.share(data).catch(function () { /* dismissed */ });
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(function () {
+        document.getElementById('shareAppBtn').textContent = 'Link copied';
+        setTimeout(function () {
+          document.getElementById('shareAppBtn').textContent = 'Send the link instead';
+        }, 2000);
+      });
+    } else {
+      prompt('Copy this link:', url);
+    }
   });
 
   document.getElementById('clearBtn').addEventListener('click', function () {
