@@ -118,6 +118,16 @@ it returns to the foreground, and reloads once when a new worker takes over
 launch showed the old build while the new one installed silently in the
 background, so you had to quit and reopen **twice** to see any change.
 
+**Media in a service worker must honour Range.** Safari requests `<audio>` in byte
+ranges and rejects a plain `200` answer to a `Range` request — playback then fails
+with nothing visible in the console. The audio handler originally cache-matched on
+the URL and returned the stored full response, so previews worked in Chrome (which
+accepts a 200) and were silent on iOS as soon as anything had been cached. It now
+slices a real `206` with `Content-Range` out of the cached body, which Apple's CDN
+permits because it sends `access-control-allow-origin: *`. Uncached tracks are
+passed straight through so Safari can stream immediately, with the cache warmed in
+the background via `waitUntil`.
+
 **Info → Data shows the running build** (`Build hinterland-vNN · audio ready`).
 If someone reports a fix not working, get that line first — it separates "the fix
 is wrong" from "you are on a stale cache".

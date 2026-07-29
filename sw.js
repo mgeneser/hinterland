@@ -7,7 +7,7 @@
  * Bump CACHE when you change any precached file, or phones will keep the old one.
  */
 
-var CACHE = 'hinterland-v18';
+var CACHE = 'hinterland-v19';
 var AUDIO_CACHE = 'hinterland-audio';
 
 var SHELL = [
@@ -110,19 +110,16 @@ self.addEventListener('fetch', function (ev) {
 
   var url = new URL(req.url);
 
-  // Song previews: cache-first and keep them, so "save for offline" sticks.
+  // Song previews.
+  //
+  // Safari requests media in byte ranges and REJECTS a plain 200 answer to a
+  // Range request — the audio then fails to load with no error anyone can see.
+  // The old code cache-matched on the URL and handed back the stored full 200,
+  // so as soon as a preview had been cached (playing one, or "save for
+  // offline"), previews stopped working on iOS while still working in Chrome,
+  // which happily accepts a 200. Ranges must be honoured properly.
   if (url.hostname.indexOf('audio-ssl.itunes.apple.com') !== -1) {
-    ev.respondWith(
-      caches.open(AUDIO_CACHE).then(function (c) {
-        return c.match(req).then(function (hit) {
-          if (hit) return hit;
-          return fetch(req).then(function (res) {
-            c.put(req, res.clone()).catch(function () {});
-            return res;
-          });
-        });
-      })
-    );
+    ev.respondWith(audioResponse(ev, req));
     return;
   }
 
@@ -148,3 +145,53 @@ self.addEventListener('fetch', function (ev) {
     })
   );
 });
+
+// Serve a preview, honouring Range. Apple's CDN sends access-control-allow-origin: *,
+// so the cached body is readable and can be sliced here.
+function audioResponse(ev, req) {
+  var range = req.headers.get('range');
+  // Key on the bare URL so one stored copy answers every range for that track.
+  var key = new Request(req.url);
+
+  return caches.open(AUDIO_CACHE).then(function (c) {
+    return c.match(key).then(function (hit) {
+      if (hit) return sliceIfNeeded(hit, range);
+
+      // Not cached yet: let the network answer this request untouched so Safari
+      // can start streaming immediately, and warm the cache separately for
+      // offline use rather than making playback wait on a full download.
+      ev.waitUntil(
+        fetch(key).then(function (full) {
+          if (full && full.status === 200) return c.put(key, full);
+        }).catch(function () {})
+      );
+      return fetch(req);
+    });
+  }).catch(function () { return fetch(req); });
+}
+
+function sliceIfNeeded(res, range) {
+  if (!range) return res.clone();
+  return res.clone().arrayBuffer().then(function (buf) {
+    var total = buf.byteLength;
+    var m = /bytes=(\d*)-(\d*)/.exec(range) || [];
+    var start = m[1] ? parseInt(m[1], 10) : 0;
+    var end = m[2] ? parseInt(m[2], 10) : total - 1;
+    if (isNaN(start) || start < 0) start = 0;
+    if (isNaN(end) || end >= total) end = total - 1;
+    if (start > end) {
+      return new Response('', { status: 416, statusText: 'Range Not Satisfiable' });
+    }
+    var part = buf.slice(start, end + 1);
+    return new Response(part, {
+      status: 206,
+      statusText: 'Partial Content',
+      headers: {
+        'Content-Type': res.headers.get('Content-Type') || 'audio/mp4',
+        'Content-Length': String(part.byteLength),
+        'Content-Range': 'bytes ' + start + '-' + end + '/' + total,
+        'Accept-Ranges': 'bytes'
+      }
+    });
+  });
+}
