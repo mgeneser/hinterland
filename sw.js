@@ -7,8 +7,11 @@
  * Bump CACHE when you change any precached file, or phones will keep the old one.
  */
 
-var CACHE = 'hinterland-v19';
-var AUDIO_CACHE = 'hinterland-audio';
+var CACHE = 'hinterland-v22';
+// Versioned deliberately. Responses cached before previews honoured byte ranges
+// are unusable on iOS, and the activate handler below only keeps caches it knows
+// about — so bumping this name is what finally evicts them.
+var AUDIO_CACHE = 'hinterland-audio-v2';
 
 var SHELL = [
   './',
@@ -83,11 +86,21 @@ var SHELL = [
 self.addEventListener('install', function (ev) {
   ev.waitUntil(
     caches.open(CACHE)
-      // addAll is all-or-nothing; add individually so one bad file can't stop
-      // the whole install and leave someone with no offline app at all.
+      // Two things matter here.
+      //
+      // addAll is all-or-nothing, so files are added individually — one bad
+      // fetch shouldn't leave someone with no offline app at all.
+      //
+      // And each is fetched with cache: 'reload' to bypass the browser's HTTP
+      // cache. cache.add() otherwise honours it, so a freshly installed version
+      // can precache STALE files and serve them forever — a new build that
+      // silently contains old assets, which is close to impossible to diagnose
+      // from the outside.
       .then(function (c) {
         return Promise.all(SHELL.map(function (url) {
-          return c.add(url).catch(function () {});
+          return c.add(new Request(url, { cache: 'reload' })).catch(function () {
+            return c.add(url).catch(function () {});   // fall back if unsupported
+          });
         }));
       })
       .then(function () { return self.skipWaiting(); })

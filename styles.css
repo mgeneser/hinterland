@@ -535,13 +535,19 @@ body {
   backdrop-filter: blur(2px);
   animation: fade 0.18s ease;
 }
+/* The panel used to be the scroll container, which meant the absolutely
+ * positioned close button scrolled away with the content — measured at
+ * top: -2582px with a long artist page open, i.e. completely unreachable.
+ * The panel now clips, and the BODY scrolls inside it, so the button stays
+ * pinned to the visible corner. */
 .sheet-panel {
   position: absolute;
   left: 0; right: 0; bottom: 0;
   max-height: 88vh;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  padding: 22px 20px calc(28px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
   background: var(--bg-raised);
   border-radius: 20px 20px 0 0;
   border-top: 1px solid var(--line);
@@ -549,17 +555,30 @@ body {
   margin: 0 auto;
   animation: rise 0.22s cubic-bezier(0.2, 0.8, 0.3, 1);
 }
+
+#sheetBody {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 22px 20px calc(28px + env(safe-area-inset-bottom));
+}
 @keyframes fade { from { opacity: 0 } }
 @keyframes rise { from { transform: translateY(18px); opacity: 0 } }
 
+/* The artist photo is positioned and sits later in the DOM, so without an
+ * explicit z-index it painted straight over this button and the sheet could not
+ * be closed. It also has to stay legible on top of a photo, hence the scrim. */
 .sheet-close {
   position: absolute;
+  z-index: 3;
   top: 12px; right: 12px;
-  width: 34px; height: 34px;
-  border: 0;
+  width: 38px; height: 38px;
+  border: 1px solid rgba(251, 246, 239, 0.55);
   border-radius: 50%;
-  background: var(--bg-sunk);
-  color: var(--text-dim);
+  background: rgba(30, 28, 21, 0.62);
+  backdrop-filter: blur(3px);
+  color: #fbf6ef;
   font-size: 21px;
   line-height: 1;
   cursor: pointer;
@@ -578,17 +597,7 @@ body {
 .sheet-origin { color: var(--text-mute); font-size: 13.5px; }
 .sheet-blurb { margin: 14px 0 0; font-size: 15.5px; line-height: 1.55; color: var(--text-dim); }
 
-.sheet-sets { margin: 16px 0 0; display: grid; gap: 7px; }
-.sheet-set {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: 3px;
-  background: var(--bg-sunk);
-  border-left: 3px solid var(--slot-color, var(--line));
-  font-size: 14px;
-}
+.sheet-sets { margin: 16px 0 0; display: grid; gap: 8px; }
 .sheet-set b { font-variant-numeric: tabular-nums; }
 .sheet-set span { color: var(--text-mute); }
 
@@ -1018,3 +1027,75 @@ body {
   font-weight: 650;
 }
 .link-row:active { transform: scale(0.99); }
+
+
+/* ── When they play ──────────────────────────────────────────────
+ * The single most useful fact while flicking through artists, so it gets the
+ * largest type in the sheet rather than a quiet line of metadata. */
+
+.when {
+  padding: 10px 14px;
+  border-radius: 3px;
+  border-left: 3px solid var(--slot-color, var(--line));
+  background: var(--bg-sunk);
+}
+.when-day {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+}
+.when-time {
+  margin-top: 1px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+}
+.when-time b {
+  font-family: var(--serif-text);
+  font-size: 27px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.when-time span { font-size: 14px; color: var(--text-mute); }
+.when-stage {
+  margin-top: 2px;
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--slot-color, var(--text-dim));
+}
+
+/* ── Sheet pager ─────────────────────────────────────────────────── */
+
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.pager-btn {
+  width: 56px;
+  min-height: var(--tap);
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
+  background: var(--bg-raised);
+  color: var(--text-dim);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+.pager-btn:disabled { opacity: 0.35; }
+.pager-count {
+  font-size: 12.5px;
+  color: var(--text-mute);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Direction-aware slide so paging reads as movement rather than a redraw. */
+@keyframes slideFromRight { from { transform: translateX(22px); opacity: 0.25 } }
+@keyframes slideFromLeft  { from { transform: translateX(-22px); opacity: 0.25 } }
+.sheet-panel.slide-l { animation: slideFromRight 0.18s ease-out; }
+.sheet-panel.slide-r { animation: slideFromLeft 0.18s ease-out; }

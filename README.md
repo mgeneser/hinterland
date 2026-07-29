@@ -128,6 +128,16 @@ permits because it sends `access-control-allow-origin: *`. Uncached tracks are
 passed straight through so Safari can stream immediately, with the cache warmed in
 the background via `waitUntil`.
 
+**`cache.add()` honours the browser HTTP cache.** A freshly installed service
+worker could therefore precache *stale* files and then serve them forever — a new
+build silently containing old assets, which is nearly impossible to diagnose from
+outside. The install step now fetches each entry with `cache: 'reload'`.
+
+**The audio cache is versioned too** (`hinterland-audio-v2`). The activate handler
+only keeps caches it knows about, so bumping that name is what evicts preview
+responses cached before ranges were handled properly. Without it, exactly the
+artists someone had already played stayed broken while everyone else worked.
+
 **Info → Data shows the running build** (`Build hinterland-vNN · audio ready`).
 If someone reports a fix not working, get that line first — it separates "the fix
 is wrong" from "you are on a stale cache".

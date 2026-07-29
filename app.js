@@ -242,6 +242,8 @@
       });
     });
 
+    sheetOrder = shown.map(function (x) { return x.name; });
+
     var prev = null;
     shown.forEach(function (s) {
       // In "my schedule" mode, show the free time between your sets —
@@ -314,12 +316,22 @@
   var sheet = document.getElementById('sheet');
   var sheetBody = document.getElementById('sheetBody');
   var lastFocus = null;
+  // Names in the order the schedule is currently showing them, so swiping in the
+  // sheet moves through the same sequence you were just scrolling.
+  var sheetOrder = [];
+  var sheetName = null;
 
   function openSheet(name) {
     var a = ARTISTS[name] || {};
     var mySets = setsByName[name] || [];
     var starred = isStarred(name);
-    lastFocus = document.activeElement;
+    sheetName = name;
+    if (sheetOrder.indexOf(name) === -1) {
+      // Opened from somewhere the schedule isn't driving; fall back to the day.
+      sheetOrder = sets.filter(function (x) { return x.dayId === state.day; })
+                       .map(function (x) { return x.name; });
+    }
+    if (sheet.hidden) lastFocus = document.activeElement;
 
     sheetBody.textContent = '';
 
@@ -335,16 +347,20 @@
 
     if (a.blurb) sheetBody.appendChild(el('p', { class: 'sheet-blurb', text: a.blurb }));
 
-    var setList = el('div', { class: 'sheet-sets' }, mySets.map(function (s) {
+    // When they play is the thing you actually want while flicking through
+    // artists, so it gets the largest type in the sheet.
+    sheetBody.appendChild(el('div', { class: 'sheet-sets' }, mySets.map(function (s) {
       var d = DAYS.filter(function (x) { return x.id === s.dayId; })[0];
       var stage = stageById[s.stageId];
-      return el('div', { class: 'sheet-set', style: '--slot-color:' + stage.color }, [
-        el('b', { text: d.label.slice(0, 3) + ' ' + fmtTime(s.start) }),
-        el('span', { text: '– ~' + fmtTime(s.end) }),
-        el('span', { text: '· ' + stage.name }),
+      return el('div', { class: 'when', style: '--slot-color:' + stage.color }, [
+        el('div', { class: 'when-day', text: d.label }),
+        el('div', { class: 'when-time' }, [
+          el('b', { text: fmtTime(s.start) }),
+          el('span', { text: ' – ~' + fmtTime(s.end) }),
+        ]),
+        el('div', { class: 'when-stage', text: stage.name }),
       ]);
-    }));
-    sheetBody.appendChild(setList);
+    })));
 
     var rows = [];
     if (a.soundsLike && a.soundsLike.length) {
@@ -396,10 +412,64 @@
         'Details for this act were hard to pin down — treat them as rough.' }));
     }
 
+    // Pager. Swiping does the same thing; these exist because a swipe is
+    // invisible and unusable with a keyboard or switch control.
+    var i = sheetOrder.indexOf(name);
+    sheetBody.appendChild(el('div', { class: 'pager' }, [
+      el('button', {
+        class: 'pager-btn', 'aria-label': 'Previous artist',
+        disabled: i <= 0 ? 'disabled' : null,
+        onclick: function () { sheetGo(-1); },
+      }, ['\u2039']),
+      el('span', { class: 'pager-count',
+        text: i >= 0 ? (i + 1) + ' of ' + sheetOrder.length : '' }),
+      el('button', {
+        class: 'pager-btn', 'aria-label': 'Next artist',
+        disabled: (i < 0 || i >= sheetOrder.length - 1) ? 'disabled' : null,
+        onclick: function () { sheetGo(1); },
+      }, ['\u203a']),
+    ]));
+
     sheet.hidden = false;
     document.body.style.overflow = 'hidden';
     btn.focus();
   }
+
+  function sheetGo(delta) {
+    var i = sheetOrder.indexOf(sheetName);
+    var next = i + delta;
+    if (i < 0 || next < 0 || next >= sheetOrder.length) return;
+    stopAudio();                       // don't carry one artist's song onto the next
+    var panel = sheet.querySelector('.sheet-panel');
+    panel.classList.remove('slide-l', 'slide-r');
+    // Force a reflow so the animation restarts on consecutive swipes.
+    void panel.offsetWidth;
+    panel.classList.add(delta > 0 ? 'slide-l' : 'slide-r');
+    openSheet(sheetOrder[next]);
+    panel.scrollTop = 0;
+  }
+
+  (function sheetSwipe() {
+    var x0 = null, y0 = null;
+    var panel = sheet.querySelector('.sheet-panel');
+    panel.addEventListener('touchstart', function (ev) {
+      x0 = ev.touches[0].clientX; y0 = ev.touches[0].clientY;
+    }, { passive: true });
+    panel.addEventListener('touchend', function (ev) {
+      if (x0 === null) return;
+      var dx = ev.changedTouches[0].clientX - x0;
+      var dy = ev.changedTouches[0].clientY - y0;
+      x0 = null;
+      // Horizontal intent only — otherwise scrolling the sheet would page it.
+      if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.6) sheetGo(dx < 0 ? 1 : -1);
+    }, { passive: true });
+  })();
+
+  document.addEventListener('keydown', function (ev) {
+    if (sheet.hidden) return;
+    if (ev.key === 'ArrowRight') sheetGo(1);
+    if (ev.key === 'ArrowLeft') sheetGo(-1);
+  });
 
   function closeSheet() {
     sheet.hidden = true;
