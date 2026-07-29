@@ -18,9 +18,11 @@ by starring acts. Its main job is answering *"can we go back to the camper for a
 - **Eats** — all 30 food and drink vendors grouped by area, searchable, with
   filters for vegan / vegetarian / gluten-free / dairy-free / nut-free. Iowa
   vendors are flagged.
-- **Map** — the official grounds and concourse maps, plus where you are, which way
-  you're facing, and how far it is to each stage, gate, and camping area. See
-  **Map accuracy** below before trusting the dot.
+- **Map** — the map, one button, and two answers in large type: how far back to
+  your tent, and how far to the next act you starred. Everything else — the full
+  list of gates and parking, saving your camp, sending your spot, calibration and
+  the accuracy notes — sits behind two collapsed disclosures. See **Map accuracy**
+  below before trusting the dot.
 - **Info** — Basecamp hours and amenities, your stats, stage key, and the caveats.
 
 Each phone keeps its own schedule. Stars live in `localStorage`; there are no

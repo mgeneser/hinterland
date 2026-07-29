@@ -98,11 +98,8 @@
 
 <!-- ── Map ──────────────────────────────────────────────────────── -->
 <main id="view-map" class="view" role="tabpanel" aria-labelledby="tab-map" tabindex="0">
-  <div class="arch-head">
-    <img class="ill" src="img/ill-map.png" alt="" width="280" height="280">
-    <h2 class="sr-only">Map</h2>
-    <p class="arch-sub">Where you are, and how far to walk</p>
-  </div>
+  <h2 class="sr-only">Map</h2>
+
 
   <div class="seg" role="group" aria-label="Which map">
     <button class="seg-btn is-active" data-map="grounds" aria-pressed="true">Grounds</button>
@@ -121,33 +118,46 @@
   </div>
 
   <div class="map-controls">
-    <button class="action" id="locBtn">Show where I am</button>
-    <button class="action" id="campBtn">Save where I'm camped</button>
-    <button class="action" id="spotBtn">Send my spot</button>
-    <p class="muted" id="locStatus" role="status" aria-live="polite">Location is off. Nothing is sent anywhere — it stays on your phone.</p>
+    <button class="action action--primary" id="locBtn">Show where I am</button>
+    <p class="muted map-status" id="locStatus" role="status" aria-live="polite">Nothing is sent anywhere — location stays on your phone.</p>
   </div>
 
-  <div id="spotsWrap" class="map-nav" hidden>
-    <h2 class="map-h">Spots people sent you</h2>
-    <ul class="dist-list" id="spotsList"></ul>
-    <p class="note">A spot is where someone stood when they tapped send, not where they are now.</p>
-  </div>
+  <!-- The two things worth knowing at a glance, in type you can read at arm's
+       length. Everything else is one tap away, not in the way. -->
+  <div id="glance" class="glance"></div>
 
-  <div id="mapNav" class="map-nav" hidden>
-    <h2 class="map-h">Walking from here</h2>
-    <ul class="dist-list" id="distList"></ul>
-    <button class="action action--quiet" id="calBtn">I’m standing at a landmark…</button>
-    <p class="note" id="calNote"></p>
-  </div>
+  <details class="more" id="moreMap">
+    <summary>Places, camp &amp; sharing</summary>
 
-  <div class="info-wrap">
-    <section class="card">
-      <h2>How accurate is this?</h2>
-      <p>The map is an illustration, not a survey drawing — it’s stretched vertically and it straightens the road along the south edge. Positions here are worked out by matching it to real road geometry, and land within roughly <strong>180 m</strong>. Good enough for “the campfire stage is west, keep walking”; not good enough for “it’s twelve paces that way.”</p>
-      <p><strong>The Main Stage moved for 2026.</strong> A new permanent stage was built about half a mile east of where it used to be. Its position here comes from construction-era aerial photos, so it’s the least certain point on the map — treat it as ±150 m until someone stands there.</p>
-      <p>Tapping <em>I’m standing at a landmark</em> when you’re physically at a gate or stage corrects the offset for your phone and makes everything after it much better.</p>
-    </section>
-  </div>
+    <div class="more-body">
+      <div class="more-actions">
+        <button class="action" id="campBtn">Save where I’m camped</button>
+        <button class="action" id="spotBtn">Send my spot</button>
+      </div>
+
+      <div id="spotsWrap" hidden>
+        <h3 class="map-h">Spots people sent you</h3>
+        <ul class="dist-list" id="spotsList"></ul>
+        <p class="note">A spot is where someone stood when they tapped send, not where they are now.</p>
+      </div>
+
+      <h3 class="map-h">Everything, by distance</h3>
+      <ul class="dist-list" id="distList"></ul>
+
+      <button class="action action--quiet" id="calBtn">I’m standing at a landmark…</button>
+      <p class="note" id="calNote"></p>
+    </div>
+  </details>
+
+  <details class="more">
+    <summary>How accurate is this?</summary>
+    <div class="more-body">
+      <p>The map is an illustration, not a survey drawing, so positions land within roughly <strong>180 m</strong>. Good for “the campfire stage is west, keep walking”; not for “it’s twelve paces that way.”</p>
+      <p><strong>The Main Stage moved for 2026</strong> — its position comes from construction-era photos, so treat it as ±150 m.</p>
+      <p>Distances and directions are worked out from real coordinates and are more trustworthy than the dot on the picture. Tapping <em>I’m standing at a landmark</em> at a gate corrects everything for your phone.</p>
+    </div>
+  </details>
+
 </main>
 
 <!-- ── Info: Basecamp + practical ───────────────────────────────── -->

@@ -1282,3 +1282,100 @@ body {
   background: color-mix(in srgb, var(--sage) 10%, var(--bg-raised));
 }
 .dist-row--camp .dist-tag { color: var(--sage); }
+
+/* ── Map: glance cards ───────────────────────────────────────────
+ * Read at arm's length, at night, possibly holding a drink. Big distance,
+ * an arrow word, nothing else competing. */
+
+.glance { padding: 4px 16px 0; display: grid; gap: 8px; }
+
+.glance-card {
+  padding: 13px 15px;
+  border: 1px solid var(--line-strong);
+  border-left: 4px solid var(--accent);
+  border-radius: 3px;
+  background: var(--bg-raised);
+}
+.glance-card--camp { border-left-color: var(--sage); }
+.glance-card--next { border-left-color: var(--main); }
+
+.glance-tag {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+}
+.glance-card--camp .glance-tag { color: var(--sage); }
+.glance-card--next .glance-tag { color: var(--main); }
+
+.glance-title {
+  font-size: 15px;
+  font-weight: 650;
+  margin-top: 1px;
+  overflow-wrap: anywhere;
+}
+.glance-dist {
+  margin-top: 4px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.glance-dist b {
+  font-family: var(--serif-text);
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.glance-dist span { font-size: 15px; color: var(--text-dim); }
+.glance-dir {
+  margin-top: 3px;
+  font-size: 14.5px;
+  font-weight: 650;
+  color: var(--text);
+}
+.glance-empty {
+  margin: 0;
+  padding: 10px 2px;
+  font-size: 13.5px;
+  color: var(--text-mute);
+}
+
+.map-status { padding: 0 16px; margin: 8px 0 4px; font-size: 12.5px; }
+.action--primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 750;
+}
+
+/* ── Progressive disclosure ──────────────────────────────────────── */
+
+.more {
+  margin: 12px 16px 0;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--bg-raised);
+}
+.more > summary {
+  min-height: var(--tap);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  cursor: pointer;
+  font-size: 13.5px;
+  font-weight: 650;
+  color: var(--text-dim);
+  list-style: none;
+}
+.more > summary::-webkit-details-marker { display: none; }
+.more > summary::before {
+  content: "▸";
+  color: var(--text-mute);
+  transition: transform 0.15s;
+}
+.more[open] > summary::before { transform: rotate(90deg); }
+.more[open] > summary { border-bottom: 1px solid var(--line); }
+.more-body { padding: 12px 14px 14px; }
+.more-body .map-h { margin-top: 4px; }
+.more-actions { display: grid; gap: 8px; margin-bottom: 4px; }

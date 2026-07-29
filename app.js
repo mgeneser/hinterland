@@ -984,6 +984,7 @@
   function renderMap() {
     renderSpots();
     renderCampBtn();
+    renderGlance();
     var img = document.getElementById('mapImg');
     var want = mapState.which === 'concourse' ? MAP.concourse : MAP.image;
     if (img.getAttribute('src') !== want) img.setAttribute('src', want);
@@ -1066,12 +1067,72 @@
     });
   }
 
+
+  // The two facts worth reading at a glance: how to get back to the tent, and
+  // where the next act you starred is playing. Everything else lives behind a
+  // disclosure — the map tab had become 2.6 screens of scrolling, which is a
+  // reference document, not something you use in the dark.
+  function renderGlance() {
+    var wrap = document.getElementById('glance');
+    wrap.textContent = '';
+    var fix = mapState.fix ? HLGeo.correct(mapState.fix) : null;
+    if (!fix) return;
+
+    function card(kind, tag, title, target) {
+      var m = HLGeo.distanceM(fix, target);
+      var bearing = HLGeo.bearingDeg(fix, target);
+      var dir;
+      if (mapState.heading !== null) {
+        var d = ((bearing - mapState.heading + 540) % 360) - 180;
+        if (Math.abs(d) < 25) dir = '\u2191  straight ahead';
+        else if (Math.abs(d) > 155) dir = '\u2193  behind you';
+        else dir = d > 0 ? '\u2192  to your right' : '\u2190  to your left';
+      } else {
+        dir = HLGeo.compass(bearing) + '  \u00b7  turn on compass for left/right';
+      }
+      return el('div', { class: 'glance-card glance-card--' + kind }, [
+        el('div', { class: 'glance-tag', text: tag }),
+        el('div', { class: 'glance-title', text: title }),
+        el('div', { class: 'glance-dist' }, [
+          el('b', { text: HLGeo.fmtDistance(m) }),
+          el('span', { text: ' \u00b7 ' + HLGeo.walkMinutes(m) + ' min' }),
+        ]),
+        el('div', { class: 'glance-dir', text: dir }),
+      ]);
+    }
+
+    if (camp) wrap.appendChild(card('camp', 'Your camp', 'Back to the tent', camp));
+
+    var now = new Date();
+    var next = sets.filter(function (s) {
+      return isStarred(s.name) && s.end > now;
+    })[0];
+    if (next) {
+      var placeId = STAGE_PLACE[next.stageId];
+      var place = PLACES.filter(function (p) { return p.id === placeId; })[0];
+      if (place) {
+        wrap.appendChild(card('next', next.name + ' \u00b7 ' + fmtTime(next.start),
+                              stageById[next.stageId].name, place));
+      }
+    }
+
+    if (!wrap.children.length) {
+      wrap.appendChild(el('p', { class: 'glance-empty', text:
+        camp ? 'Star an act and the walk to its stage shows here.'
+             : 'Save where you\u2019re camped and the way back shows here.' }));
+    }
+  }
+
   function renderDistances() {
-    var wrap = document.getElementById('mapNav');
     var ul = document.getElementById('distList');
-    if (!mapState.fix) { wrap.hidden = true; return; }
-    wrap.hidden = false;
+    if (!ul) return;
     ul.textContent = '';
+    if (!mapState.fix) {
+      ul.appendChild(el('li', { class: 'dist-row' }, [
+        el('span', { class: 'dist-meta', text: 'Turn on your location to see distances.' }),
+      ]));
+      return;
+    }
 
     var fix = HLGeo.correct(mapState.fix);
 
@@ -1143,12 +1204,12 @@
         accuracy: pos.coords.accuracy,
       };
       var cal = HLGeo.loadCal();
-      setStatus('GPS accurate to about ' + Math.round(pos.coords.accuracy) + ' m' +
-        (cal ? ', corrected at ' + cal.at + '.' :
-               '. The map itself is only good to ~180 m — see below.'));
+      setStatus('Located to about ' + Math.round(pos.coords.accuracy) + ' m' +
+        (cal ? ', corrected at ' + cal.at + '.' : '.'));
       positionMe();
       renderDistances();
-      renderSpots();   // shared spots need the new fix to show distance too
+      renderSpots();
+      renderGlance();   // shared spots need the new fix to show distance too
       document.getElementById('locBtn').textContent = 'Stop using my location';
     }, function (err) {
       setStatus(err.code === 1
@@ -1165,10 +1226,11 @@
     mapState.fix = null;
     mapState.heading = null;
     document.getElementById('locBtn').textContent = 'Show where I am';
-    setStatus('Location is off. Nothing is sent anywhere — it stays on your phone.');
+    setStatus('Nothing is sent anywhere — location stays on your phone.');
     positionMe();
     renderDistances();
     renderSpots();
+    renderGlance();
   }
 
   // iOS requires an explicit, gesture-triggered grant for the compass.
@@ -1268,6 +1330,7 @@
     save(STORE_CAMP, camp);
     renderCampBtn();
     renderDistances();
+    renderGlance();
     positionMe();
     announce('Camp pin saved.');
     setStatus('Camp saved. It will show at the top of the walking list from now on.');
@@ -1303,6 +1366,7 @@
           save(STORE_CAMP, null);
           renderCampBtn();
           renderDistances();
+          renderGlance();
           positionMe();
         },
       }, ['Forget']),
@@ -1374,6 +1438,7 @@
   function renderSpots() {
     var wrap = document.getElementById('spotsWrap');
     var ul = document.getElementById('spotsList');
+    if (!wrap || !ul) return;
     if (!spots.length) { wrap.hidden = true; return; }
     wrap.hidden = false;
     ul.textContent = '';
