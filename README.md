@@ -106,9 +106,21 @@ Then open the Pages URL on your phone → Share → **Add to Home Screen**.
 
 ### If the schedule changes
 
-Edit the `SETS` array in `data.js`, then bump `CACHE` in `sw.js` (e.g. `hinterland-v1`
-→ `hinterland-v2`). Without the bump, phones that already installed the app keep
-serving the old schedule from cache.
+Edit the `SETS` array in `data.js`, then **bump `CACHE` in `sw.js`**. Without the
+bump, phones that already installed the app keep serving the old data from cache
+forever. This is the single easiest thing to forget, and it has bitten this repo
+more than once — a change shipped, the server served it, and phones carried on
+running the previous build, which is indistinguishable from "the fix didn't work".
+
+The app now updates itself: it calls `registration.update()` on load and whenever
+it returns to the foreground, and reloads once when a new worker takes over
+(`controllerchange`), guarded against reload loops. Before that, a cache-first
+launch showed the old build while the new one installed silently in the
+background, so you had to quit and reopen **twice** to see any change.
+
+**Info → Data shows the running build** (`Build hinterland-vNN · audio ready`).
+If someone reports a fix not working, get that line first — it separates "the fix
+is wrong" from "you are on a stale cache".
 
 ## Things worth knowing
 

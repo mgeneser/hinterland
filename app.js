@@ -1136,9 +1136,42 @@
   }, 60000);
 
   // Service worker — offline is the whole point at this venue.
+  //
+  // Cache-first means a launch shows whatever was cached last time, and the new
+  // worker only installs in the background. Without the reload below you have to
+  // quit and reopen TWICE to actually see an update, which made every fix look
+  // like it hadn't worked.
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
-      navigator.serviceWorker.register('sw.js').catch(function () { /* fine */ });
+      navigator.serviceWorker.register('sw.js').then(function (reg) {
+        // Ask immediately rather than waiting for the browser's own schedule,
+        // and again whenever the app is brought back to the foreground.
+        reg.update().catch(function () {});
+        document.addEventListener('visibilitychange', function () {
+          if (!document.hidden) reg.update().catch(function () {});
+        });
+      }).catch(function () { /* fine — the app still works */ });
+
+      // sw.js calls skipWaiting(), so a new worker takes over as soon as it
+      // installs. That fires controllerchange, and the page is still running the
+      // old JS at that point — so reload once to pick up the new build.
+      var reloading = false;
+      navigator.serviceWorker.addEventListener('controllerchange', function () {
+        if (reloading) return;
+        reloading = true;
+        // Guard against a reload loop if anything ever goes wrong here.
+        if (sessionStorage.getItem('hl.reloaded') === '1') return;
+        try { sessionStorage.setItem('hl.reloaded', '1'); } catch (e) {}
+        location.reload();
+      });
+    });
+
+    // Clear the guard once the page has settled, so the next genuine update can
+    // still reload.
+    window.addEventListener('load', function () {
+      setTimeout(function () {
+        try { sessionStorage.removeItem('hl.reloaded'); } catch (e) {}
+      }, 5000);
     });
   }
 })();
