@@ -1269,3 +1269,16 @@ body {
   width: 100%; height: 44px;
   transform: translate(-50%, -50%);
 }
+
+/* ── Camp pin ────────────────────────────────────────────────────
+ * Green rather than gold, and never dimmed: unlike a shared spot, a camp
+ * doesn't move, so it has no staleness to communicate. */
+
+.spot-pin--camp::after { background: var(--sage); }
+.spot-pin--camp .spot-label { background: var(--sage); }
+
+.dist-row--camp {
+  border-color: var(--sage);
+  background: color-mix(in srgb, var(--sage) 10%, var(--bg-raised));
+}
+.dist-row--camp .dist-tag { color: var(--sage); }

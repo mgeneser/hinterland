@@ -983,6 +983,7 @@
 
   function renderMap() {
     renderSpots();
+    renderCampBtn();
     var img = document.getElementById('mapImg');
     var want = mapState.which === 'concourse' ? MAP.concourse : MAP.image;
     if (img.getAttribute('src') !== want) img.setAttribute('src', want);
@@ -1040,6 +1041,18 @@
     Array.prototype.forEach.call(stage.querySelectorAll('.spot-pin'), function (n) { n.remove(); });
     if (mapState.which !== 'grounds') return;
 
+    if (camp) {
+      var cpx = HLGeo.lonLatToPx(camp.lat, camp.lon);
+      var cx = cpx.x / MAP.refWidth * 100, cy = cpx.y / MAP.refHeight * 100;
+      if (cx > -8 && cx < 108 && cy > -8 && cy < 108) {
+        stage.appendChild(el('div', {
+          class: 'spot-pin spot-pin--camp',
+          style: 'left:' + cx + '%;top:' + cy + '%',
+          title: 'Your camp',
+        }, [el('span', { class: 'spot-label', text: 'Camp' })]));
+      }
+    }
+
     spots.forEach(function (spot) {
       var px = HLGeo.lonLatToPx(spot.lat, spot.lon);
       var xPct = px.x / MAP.refWidth * 100, yPct = px.y / MAP.refHeight * 100;
@@ -1075,6 +1088,9 @@
         bearing: HLGeo.bearingDeg(fix, p),
       };
     }).sort(function (a, b) { return a.m - b.m; });
+
+    var campEl = campRow(fix);
+    if (campEl) ul.appendChild(campEl);
 
     if (nextStarred) {
       var pid = STAGE_PLACE[nextStarred.stageId];
@@ -1224,6 +1240,74 @@
     renderDistances(); positionMe();
   });
 
+
+
+  // ── Where I'm camped ────────────────────────────────────────────
+  //
+  // Same machinery as a shared spot, with one difference that changes the whole
+  // design: a camp doesn't move. So it never goes stale, it never needs a
+  // timestamp caveat, and it sits pinned at the top of the walking list — because
+  // the moment you need it is 1 AM, in the dark, at your least capable.
+
+  var STORE_CAMP = 'hinterland26.camp';
+  var camp = load(STORE_CAMP, null);
+
+  function renderCampBtn() {
+    var btn = document.getElementById('campBtn');
+    btn.textContent = camp ? 'Move my camp pin' : 'Save where I\u2019m camped';
+  }
+
+  document.getElementById('campBtn').addEventListener('click', function () {
+    if (!mapState.fix) {
+      setStatus('Turn on your location first, then save your camp.');
+      return;
+    }
+    if (camp && !confirm('Move your camp pin to where you are standing now?')) return;
+    var fix = HLGeo.correct(mapState.fix);
+    camp = { lat: fix.lat, lon: fix.lon, at: Date.now() };
+    save(STORE_CAMP, camp);
+    renderCampBtn();
+    renderDistances();
+    positionMe();
+    announce('Camp pin saved.');
+    setStatus('Camp saved. It will show at the top of the walking list from now on.');
+  });
+
+  function campRow(fix) {
+    if (!camp) return null;
+    var meta;
+    if (fix) {
+      var m = HLGeo.distanceM(fix, camp);
+      var bearing = HLGeo.bearingDeg(fix, camp);
+      var rel = '';
+      if (mapState.heading !== null) {
+        var d = ((bearing - mapState.heading + 540) % 360) - 180;
+        if (Math.abs(d) < 25) rel = 'straight ahead';
+        else if (Math.abs(d) > 155) rel = 'behind you';
+        else rel = (d > 0 ? 'to your right' : 'to your left');
+      }
+      meta = HLGeo.fmtDistance(m) + ' \u00b7 ' + HLGeo.walkMinutes(m) + ' min walk \u00b7 ' +
+             (rel || HLGeo.compass(bearing));
+    } else {
+      meta = 'Turn on your location for distance and direction';
+    }
+    return el('li', { class: 'dist-row dist-row--camp' }, [
+      el('span', { class: 'dist-tag', text: 'Your camp' }),
+      el('span', { class: 'dist-name', text: 'Back to the tent' }),
+      el('span', { class: 'dist-meta', text: meta }),
+      el('button', {
+        class: 'spot-forget', 'aria-label': 'Forget my camp pin',
+        onclick: function () {
+          if (!confirm('Forget where you camped?')) return;
+          camp = null;
+          save(STORE_CAMP, null);
+          renderCampBtn();
+          renderDistances();
+          positionMe();
+        },
+      }, ['Forget']),
+    ]);
+  }
 
   // ── Send my spot ────────────────────────────────────────────────
   //

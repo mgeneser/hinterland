@@ -219,6 +219,14 @@ That has consequences you should not gloss over:
 Location is requested only when you tap the button, and is never sent anywhere by
 the app itself.
 
+### Where I'm camped
+
+Same machinery as a shared spot with one difference that changes the design: a
+camp doesn't move. So it never goes stale, carries no timestamp caveat, and sits
+pinned at the top of the walking list — because the moment you need it is 1 AM,
+in the dark, at your least capable. Its pin is green rather than gold and is
+never dimmed.
+
 ### Send my spot
 
 The honest alternative to live friend-tracking. Live location needs a server *and*
