@@ -118,6 +118,15 @@ serving the old schedule from cache.
   Everywhere an estimate is shown it's prefixed with `~`. Don't miss a headliner
   over a guessed number.
 - **Times are your phone's local time**, which is Central at the festival.
+- **The Schedule opens on today** once the festival starts, and today overrides
+  whatever day you last tapped — otherwise a stray tap on Sunday back in July
+  would still be showing Sunday on the Friday. Outside the festival the
+  remembered day is used instead. The day **rolls over at 4 AM, not midnight**:
+  Campfire sets run to about 1:30 AM and belong to the night before, so at
+  12:30 AM watching Ninajirachi the app still says Friday. It also re-checks when
+  the app returns to the foreground, so opening it on Saturday morning doesn't
+  still show Friday — but never on a timer, which would yank the view out from
+  under you mid-scroll.
 - **Stars are per-device.** They live in `localStorage`, aren't synced to anything,
   and clearing browser data clears them. Every person who installs the app keeps
   their own separate schedule.

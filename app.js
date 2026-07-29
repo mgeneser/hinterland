@@ -117,31 +117,36 @@
 
   // ── State ───────────────────────────────────────────────────────
 
+  // Which festival day is it right now, or null if the festival isn't on.
+  //
+  // The day rolls over at 4 AM, not midnight. Campfire sets run to roughly
+  // 1:30 AM and belong to the night before — at 12:30 AM watching Ninajirachi
+  // you are still having Friday, and the app should agree with you.
+  //
+  // Pure function of `now` so it can be tested against real timestamps.
+  function festivalDayFor(now) {
+    var shifted = new Date(now.getTime() - 4 * 60 * 60 * 1000);
+    for (var i = 0; i < DAYS.length; i++) {
+      var d = toDate(DAYS[i].date, '00:00');
+      if (d.getFullYear() === shifted.getFullYear() &&
+          d.getMonth() === shifted.getMonth() &&
+          d.getDate() === shifted.getDate()) return DAYS[i].id;
+    }
+    return null;
+  }
+
+  // During the festival, today wins over whatever was last tapped — otherwise a
+  // stray tap on Sunday in July would still be showing Sunday on the Friday.
+  // Outside the festival, the remembered day is the useful default.
   var state = {
     view: 'schedule',
-    day: load(STORE_DAY, null) || defaultDay(),
+    day: festivalDayFor(new Date()) || load(STORE_DAY, null) || DAYS[0].id,
     starredOnly: false,
     search: '',
   };
 
-  function defaultDay() {
-    var today = new Date();
-    var match = null;
-    DAYS.forEach(function (d) {
-      var dd = toDate(d.date, '06:00');
-      if (dd.getFullYear() === today.getFullYear() &&
-          dd.getMonth() === today.getMonth() &&
-          dd.getDate() === today.getDate()) match = d.id;
-    });
-    return match || DAYS[0].id;
-  }
-
   function isToday(day) {
-    var now = new Date();
-    var d = toDate(day.date, '00:00');
-    return d.getFullYear() === now.getFullYear() &&
-           d.getMonth() === now.getMonth() &&
-           d.getDate() === now.getDate();
+    return festivalDayFor(new Date()) === day.id;
   }
 
   // ── Element helper ──────────────────────────────────────────────
@@ -1074,6 +1079,16 @@
   });
 
   render();
+
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) return;
+    var today = festivalDayFor(new Date());
+    if (today && today !== state.day) {
+      state.day = today;
+      save(STORE_DAY, today);
+      render();
+    }
+  });
 
   // Keep "on now" honest without burning battery.
   setInterval(function () {
