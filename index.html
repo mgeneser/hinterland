@@ -174,7 +174,8 @@
     <!-- Hours stay visible: "is the bar still open" is the one question this
          tab gets asked on the ground. -->
     <section class="card">
-      <h2>Hours</h2>
+      <h2 id="hoursHeading">Hours</h2>
+      <ul class="open-now" id="openNow"></ul>
       <ul class="hours-list" id="basecampHours"></ul>
     </section>
 
@@ -184,6 +185,13 @@
       <button class="action" id="shareAppBtn">Send the link instead</button>
     </section>
   </div>
+
+  <details class="more">
+    <summary>Hours for the whole weekend</summary>
+    <div class="more-body">
+      <ul class="hours-list" id="allHours"></ul>
+    </div>
+  </details>
 
   <details class="more">
     <summary>What else is at Basecamp</summary>
@@ -230,7 +238,6 @@
 <script src="artists.js"></script>
 <script src="previews.js"></script>
 <script src="grounds.js"></script>
-<script src="sun.js"></script>
 <script src="map.js"></script>
 <script src="app.js"></script>
 </body>

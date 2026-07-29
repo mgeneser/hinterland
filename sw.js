@@ -7,7 +7,7 @@
  * Bump CACHE when you change any precached file, or phones will keep the old one.
  */
 
-var CACHE = 'hinterland-v33';
+var CACHE = 'hinterland-v34';
 // Versioned deliberately. Responses cached before previews honoured byte ranges
 // are unusable on iOS, and the activate handler below only keeps caches it knows
 // about — so bumping this name is what finally evicts them.
@@ -21,7 +21,6 @@ var SHELL = [
   'artists.js',
   'previews.js',
   'grounds.js',
-  'sun.js',
   'map.js',
   'app.js',
   'manifest.json',

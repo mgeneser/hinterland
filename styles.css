@@ -1161,26 +1161,6 @@ body {
 }
 .slot.flash { animation: flashRow 1.4s ease-out; }
 
-/* ── Golden hour ─────────────────────────────────────────────────
- * A marker in the run of sets rather than a badge on one, because what you want
- * to know is when the light turns relative to whoever is playing. */
-
-.golden {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin: 10px 4px;
-  padding: 9px 12px;
-  border-radius: 3px;
-  border: 1px solid var(--peach);
-  background: color-mix(in srgb, var(--peach) 12%, transparent);
-  color: var(--peach);
-  font-size: 12.5px;
-  font-weight: 650;
-  letter-spacing: 0.03em;
-}
-.golden-icon { font-size: 14px; }
 
 /* ── Share ───────────────────────────────────────────────────────── */
 
@@ -1398,3 +1378,34 @@ body {
 .more-body .stage-key { margin-bottom: 14px; }
 .more-body p { margin: 0 0 10px; font-size: 14px; color: var(--text-dim); }
 .more-body .link-row { margin-top: 8px; }
+
+/* ── Open right now ──────────────────────────────────────────────
+ * A status line you read, not a sentence you parse. */
+
+.open-now { list-style: none; margin: 0 0 14px; padding: 0; display: grid; gap: 7px; }
+.open-row {
+  display: grid;
+  grid-template-columns: 10px 1fr auto;
+  align-items: baseline;
+  gap: 9px;
+  font-size: 14.5px;
+}
+.open-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--text-mute);
+  align-self: center;
+}
+.open-row.is-open .open-dot { background: var(--sage); }
+.open-row.is-shut .open-dot { background: transparent; box-shadow: inset 0 0 0 1.5px var(--text-mute); }
+.open-what { font-weight: 650; overflow-wrap: anywhere; }
+.open-detail { font-size: 13px; color: var(--text-mute); white-space: nowrap; }
+.open-row.is-open .open-detail { color: var(--sage); font-weight: 650; }
+
+.hours-note {
+  display: block;
+  font-size: 12.5px;
+  color: var(--text-mute);
+  font-style: italic;
+  margin-top: 1px;
+}

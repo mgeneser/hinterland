@@ -130,13 +130,38 @@ const DIET_LABELS = {
 };
 
 // Basecamp — the campground hub, west of the Dollar General.
+//
+// Hours are structured rather than prose so the app can answer "what's open
+// right now" instead of making you parse a sentence. Values are hours from
+// midnight of that festival day, so 25 means 1 AM the next morning — which
+// matches the 4 AM rollover used everywhere else: the bar closing at 1 AM
+// belongs to the night before, not to the next day.
 const BASECAMP = {
   blurb: 'The central hub in the campgrounds, just west of Dollar General. Three food vendors run around the clock, so this is where you go at 3 AM.',
   hours: [
-    { what: 'Full-service bar', when: 'Wed 4 PM – midnight · Thu–Sat 9 AM–1 PM and 9 PM–1 AM · Sun 9 AM–1 PM and 9 PM–midnight' },
-    { what: 'Food vendors', when: '24 hours — Space Fruit, Pizza Nova, Iowah Noodz' },
-    { what: 'SolFarm organic farm stand', when: 'Thu–Sun 10 AM – 2 PM' },
-    { what: 'Vinyl Cup Record Store & throwback merch', when: 'Hours vary' },
+    {
+      what: 'Full-service bar',
+      windows: {
+        wed: [[16, 24]],
+        thu: [[9, 13], [21, 25]],
+        fri: [[9, 13], [21, 25]],
+        sat: [[9, 13], [21, 25]],
+        sun: [[9, 13], [21, 24]],
+      },
+    },
+    {
+      what: 'Food vendors',
+      note: 'Space Fruit, Pizza Nova, Iowah Noodz',
+      allDay: true,
+    },
+    {
+      what: 'SolFarm organic farm stand',
+      windows: { thu: [[10, 14]], fri: [[10, 14]], sat: [[10, 14]], sun: [[10, 14]] },
+    },
+    {
+      what: 'Vinyl Cup Record Store & throwback merch',
+      varies: true,
+    },
   ],
   amenities: [
     { name: 'Water & ice stations', note: 'Refill and keep the cooler alive. Free refreshment stations are dotted around too.' },

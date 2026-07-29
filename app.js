@@ -247,16 +247,6 @@
 
     sheetOrder = shown.map(function (x) { return x.name; });
 
-    // Golden hour, worked out from the venue's coordinates. Inserted as a marker
-    // in the run of sets rather than as a badge, because what matters is
-    // *when the light changes* relative to what you're watching.
-    var sun = null;
-    try {
-      var mainPlace = PLACES.filter(function (p) { return p.id === 'main'; })[0];
-      sun = HLSun.forDate(day.date, mainPlace.lat, mainPlace.lon);
-    } catch (e) { sun = null; }
-    var goldenDone = false;
-
     var prev = null;
     shown.forEach(function (s) {
       // In "my schedule" mode, show the free time between your sets —
@@ -268,14 +258,6 @@
             el('span', { text: '~' + fmtDuration(gapMins) + ' free' }),
           ]));
         }
-      }
-      if (sun && !goldenDone && sun.goldenStart && s.start >= sun.goldenStart) {
-        list.appendChild(el('div', { class: 'golden' }, [
-          el('span', { class: 'golden-icon', 'aria-hidden': 'true', text: '\u2600' }),
-          el('span', { text: 'Golden hour ' + fmtTime(sun.goldenStart) +
-            ' \u00b7 sunset ' + fmtTime(sun.sunset) }),
-        ]));
-        goldenDone = true;
       }
       list.appendChild(renderSlot(s, now, conflicting[s.id]));
       prev = s;
@@ -538,14 +520,7 @@
       }).catch(function () {});
     }
 
-    var hours = document.getElementById('basecampHours');
-    hours.textContent = '';
-    BASECAMP.hours.forEach(function (h) {
-      hours.appendChild(el('li', {}, [
-        el('b', { text: h.what }),
-        el('span', { text: h.when }),
-      ]));
-    });
+    renderHours();
 
     var am = document.getElementById('basecampAmenities');
     am.textContent = '';
@@ -1566,6 +1541,117 @@
     render();
   });
 
+
+  // ── Basecamp hours ──────────────────────────────────────────────
+  //
+  // Scanning a sentence like "Thu–Sat 9 AM–1 PM and 9 PM–1 AM" to work out
+  // whether the bar is open right now is exactly the work a phone should be
+  // doing. Windows are hours from midnight of the festival day, so 25 = 1 AM,
+  // which keeps the after-midnight stretch attached to the night it belongs to.
+
+  var DAY_LABEL = { wed: 'Wednesday', thu: 'Thursday', fri: 'Friday', sat: 'Saturday', sun: 'Sunday' };
+
+  function fmtHour(h) {
+    var hh = ((h % 24) + 24) % 24;
+    var mins = Math.round((hh % 1) * 60);
+    var whole = Math.floor(hh);
+    if (whole === 0 && mins === 0) return 'midnight';
+    if (whole === 12 && mins === 0) return 'noon';
+    var ampm = whole >= 12 ? 'PM' : 'AM';
+    var disp = whole % 12; if (disp === 0) disp = 12;
+    return disp + (mins ? ':' + String(mins).padStart(2, '0') : '') + ' ' + ampm;
+  }
+
+  function fmtWindows(wins) {
+    return wins.map(function (w) { return fmtHour(w[0]) + '–' + fmtHour(w[1]); }).join(', ');
+  }
+
+  // Hours elapsed since midnight of the *festival* day currently in effect.
+  function hoursIntoFestivalDay(now, dayId) {
+    var day = DAYS.filter(function (d) { return d.id === dayId; })[0];
+    if (!day) return null;
+    var midnight = toDate(day.date, '00:00');
+    return (now - midnight) / 3600000;
+  }
+
+  function openState(item, dayId, hrs) {
+    if (item.allDay) return { open: true, detail: 'Open 24 hours' };
+    if (item.varies) return { open: null, detail: 'Hours vary' };
+    var wins = (item.windows || {})[dayId];
+    if (!wins || !wins.length) return { open: false, detail: 'Closed today' };
+    for (var i = 0; i < wins.length; i++) {
+      if (hrs >= wins[i][0] && hrs < wins[i][1]) {
+        return { open: true, detail: 'Open until ' + fmtHour(wins[i][1]) };
+      }
+    }
+    var next = wins.filter(function (w) { return w[0] > hrs; })[0];
+    return { open: false, detail: next ? 'Opens ' + fmtHour(next[0]) : 'Closed for the night' };
+  }
+
+  function renderHours() {
+    var now = new Date();
+    var dayId = festivalDayFor(now);
+    var openList = document.getElementById('openNow');
+    var todayList = document.getElementById('basecampHours');
+    var allList = document.getElementById('allHours');
+    var heading = document.getElementById('hoursHeading');
+    openList.textContent = ''; todayList.textContent = ''; allList.textContent = '';
+
+    // Full weekend, always available for planning.
+    BASECAMP.hours.forEach(function (item) {
+      var rows = [];
+      if (item.allDay) rows.push('Every day, 24 hours');
+      else if (item.varies) rows.push('Hours vary');
+      else {
+        ['wed', 'thu', 'fri', 'sat', 'sun'].forEach(function (d) {
+          if (item.windows[d]) rows.push(DAY_LABEL[d] + ' ' + fmtWindows(item.windows[d]));
+        });
+      }
+      allList.appendChild(el('li', {}, [
+        el('b', { text: item.what }),
+        el('span', { text: rows.join(' · ') }),
+        item.note ? el('span', { class: 'hours-note', text: item.note }) : null,
+      ]));
+    });
+
+    if (!dayId) {
+      // Outside the festival there is no "now" to report.
+      heading.textContent = 'Hours';
+      todayList.appendChild(el('li', {}, [
+        el('span', { class: 'hours-note',
+          text: 'The festival hasn\u2019t started. Open the weekend view below to plan.' }),
+      ]));
+      return;
+    }
+
+    var hrs = hoursIntoFestivalDay(now, dayId);
+    heading.textContent = 'Right now · ' + DAY_LABEL[dayId];
+
+    BASECAMP.hours.forEach(function (item) {
+      var st = openState(item, dayId, hrs);
+      openList.appendChild(el('li', {
+        class: 'open-row' + (st.open === true ? ' is-open' : st.open === false ? ' is-shut' : ''),
+      }, [
+        el('span', { class: 'open-dot', 'aria-hidden': 'true' }),
+        el('span', { class: 'open-what', text: item.what }),
+        el('span', { class: 'open-detail', text: st.detail }),
+      ]));
+    });
+
+    // Today's full windows, underneath the at-a-glance state.
+    BASECAMP.hours.forEach(function (item) {
+      var text;
+      if (item.allDay) text = '24 hours';
+      else if (item.varies) text = 'Hours vary';
+      else text = item.windows[dayId] ? fmtWindows(item.windows[dayId]) : 'Closed today';
+      todayList.appendChild(el('li', {}, [
+        el('b', { text: item.what }),
+        el('span', { text: text }),
+        item.note ? el('span', { class: 'hours-note', text: item.note }) : null,
+      ]));
+    });
+  }
+
   // ── Render ──────────────────────────────────────────────────────
 
   function render() {
@@ -1648,6 +1734,7 @@
   setInterval(function () {
     if (state.view === 'schedule') { renderSchedule(); updateNowBtn(); }
     if (state.view === 'map') renderSpots();     // "sent 12 min ago" must keep counting
+    if (state.view === 'info') renderHours();   // open/closed changes on its own
   }, 60000);
 
   // Service worker — offline is the whole point at this venue.

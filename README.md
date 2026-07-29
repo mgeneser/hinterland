@@ -23,8 +23,9 @@ by starring acts. Its main job is answering *"can we go back to the camper for a
   list of gates and parking, saving your camp, sending your spot, calibration and
   the accuracy notes — sits behind two collapsed disclosures. See **Map accuracy**
   below before trusting the dot.
-- **Info** — Basecamp, with the hours visible because "is the bar still open" is
-  what this tab actually gets asked, plus the QR to share the app. What else is at
+- **Info** — Basecamp, opening with **what's open right now** and today's hours,
+  because that is what this tab actually gets asked; the whole weekend is one tap
+  away for planning. Plus the QR to share the app. What else is at
   Basecamp, your picks and offline settings, and the stage key / set-time caveats /
   sourcing all sit behind collapsed disclosures.
 
@@ -109,7 +110,6 @@ Then open the Pages URL on your phone → Share → **Add to Home Screen**.
 | `tools/fetch-previews.js` | Regenerates `previews.js` from the iTunes Search API. |
 | `tools/make-icons.py` | Regenerates the app icons from a festival illustration. |
 | `tools/make-qr.sh` | Regenerates `img/qr.png`, the share code. |
-| `sun.js` | Sunset and golden hour at the venue, computed offline. |
 
 ### If the schedule changes
 
@@ -157,11 +157,6 @@ is wrong" from "you are on a stale cache".
   Everywhere an estimate is shown it's prefixed with `~`. Don't miss a headliner
   over a guessed number.
 - **Times are your phone's local time**, which is Central at the festival.
-- **Golden hour is marked in the schedule**, computed from the venue's coordinates
-  with NOAA's solar equations — arithmetic, not an API, so it works with no
-  signal. Sunset is 8:34 PM on Thursday drifting to 8:31 PM by Sunday, which puts
-  **beabadoobee and Jessie Murph in the golden-hour slot** and every headliner
-  just after dark. Sanity-checked against a published figure for Des Moines.
 - **The share QR is a build-time asset**, not generated at runtime. The URL never
   changes, so encoding it live is pointless work — and a subtly wrong encoder
   produces a code that looks correct and refuses to scan, which is worse than
